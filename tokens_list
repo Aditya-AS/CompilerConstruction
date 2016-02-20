@@ -5,40 +5,40 @@ TK_ID
 TK_NUM
 TK_RNUM
 TK_FUNID
-TK_RECORDID Identifier for the record type
-TK_WITH Keyword with
-TK_PARAMETERS Keyword parameters
-TK_END Keyword end
-TK_WHILE Keyword while
-TK_INT Keyword int
-TK_REAL Keyword real
-TK_TYPE Keyword type
-TK_MAIN Keyword main
-TK_GLOBAL Keyword global
-TK_PARAMETER Keyword parameter
-TK_LIST Keyword list
-TK_SQL Left square bracket
-TK_SQR Right square bracket
-TK_INPUT Keyword input
-TK_OUTPUT Keyword output
-TK_INT Keyword int
-TK_REAL Keyword real
-TK_SEM Semicolon as separator
-TK_COLON Colon
-TK_DOT Used with record variable
-TK_ENDWHILE Keyword endwhile
-TK_OP Open parenthesis
-TK_CL Closed parenthesis
-TK_IF Keyword if
-TK_THEN Keyword then
-TK_ENDIF Keyword endif
-TK_READ Keyword read
-TK_WRITE Keyword write
-TK_RETURN Keyword return
-TK_PLUS Addition operator
-TK_MINUS Subtraction operator
-TK_MUL Multiplication operator
-TK_DIV Division operator
+TK_RECORDID
+TK_WITH
+TK_PARAMETERS
+TK_END 
+TK_WHILE 
+TK_INT 
+TK_REAL 
+TK_TYPE 
+TK_MAIN 
+TK_GLOBAL 
+TK_PARAMETER 
+TK_LIST 
+TK_SQL 
+TK_SQR 
+TK_INPUT 
+TK_OUTPUT 
+TK_INT 
+TK_REAL 
+TK_SEM 
+TK_COLON
+TK_DOT
+TK_ENDWHILE 
+TK_OP 
+TK_CL 
+TK_IF 
+TK_THEN 
+TK_ENDIF 
+TK_READ 
+TK_WRITE 
+TK_RETURN 
+TK_PLUS 
+TK_MINUS 
+TK_MUL 
+TK_DIV 
 TK_CALL
 TK_RECORD
 TK_ENDRECORD
