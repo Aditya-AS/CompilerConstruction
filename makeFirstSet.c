@@ -40,6 +40,7 @@ struct set* checkFirstSet(struct Grammar* grammar, char* name){
 	struct set* newSet = getSet();
 	struct set* parent = getSet();
 	struct set* temp = getSet();
+	struct set* previous = getSet();
 	// if(newSet->element==NULL)printf("%s",newSet->element);
 	while(tempRule!=NULL){
 		if(strcmp(tempRule->start->name,name)==0){
@@ -58,7 +59,18 @@ struct set* checkFirstSet(struct Grammar* grammar, char* name){
 					temp = checkFirstSet(grammar,tempNodeList->node_list->name);
 					parent=temp;
 					while(temp->nextElement!=NULL){
+					previous = temp;	
 					temp = temp->nextElement;
+					}
+					if(strcmp(temp->element,"eps")==0){
+					temp = previous;
+					// printf("asd : %s",tempNodeList->node_list->next->name);
+					if(!tempNodeList->node_list->next->is_token)temp->nextElement = checkFirstSet(grammar,tempNodeList->node_list->next->name);
+					else {
+						temp->nextElement = getSet();
+						temp->nextElement->element=tempNodeList->node_list->next->name;
+						temp=temp->nextElement;
+						}
 					}
 					newSet=temp;
 				}
@@ -66,7 +78,13 @@ struct set* checkFirstSet(struct Grammar* grammar, char* name){
 				temp = checkFirstSet(grammar,tempNodeList->node_list->name);
 				newSet->nextElement = temp;
 				while(temp->nextElement!=NULL){
+					previous = temp;
 					temp = temp->nextElement;
+				}
+				if(strcmp(temp->element,"eps")==0){
+					temp = previous;
+					// printf("asd : %s",tempNodeList->node_list->name);
+					temp->nextElement = checkFirstSet(grammar,tempNodeList->node_list->next->name);
 				}
 				newSet=temp;
 			}
@@ -128,8 +146,9 @@ void printSet(struct firstSetList* sets){
 // {
 // 	char *filename = "grammar_list";
 // 	struct Grammar* grammar = makeGrammar(filename);
+// 	// printGrammar(grammar);
 // 	struct firstSetList* sets = makeFirstSetList(grammar);
-// 	if(sets!=NULL) printSet(sets);
+// 	printSet(sets);
 // 	return 0;
 // }
 
