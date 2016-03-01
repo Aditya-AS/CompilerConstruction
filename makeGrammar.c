@@ -11,9 +11,15 @@ struct Node{
 	struct Node *next;
 };
 
+struct NodeList{
+	struct Node *node_list;
+	struct NodeList *nextList;
+};
+
 struct Rule{
+	int number_of_rules;
 	struct Node *start;
-	struct Node *rule_list;
+	struct NodeList *rule_list;
 	struct Rule *nextRule;
 };
 
@@ -25,6 +31,7 @@ struct Rule* getRule(){
 	struct Rule* newRule = (struct Rule*)malloc(sizeof(struct Rule));
 	newRule->start=NULL;
 	newRule->rule_list=NULL;
+	newRule->number_of_rules=0;
 	newRule->nextRule=NULL;
 	return newRule;
 }
@@ -37,6 +44,13 @@ struct Node* getNode(){
 	return newNode;
 }
 
+struct NodeList* getNodeList(){
+	struct NodeList* newNodeList = (struct NodeList*)malloc(sizeof(struct NodeList));
+	newNodeList->node_list=getNode();
+	newNodeList->nextList=NULL;
+	return newNodeList;
+}
+
 struct Rule* setRule(FILE *grammmarList, char *start, struct Rule* rule){
 	struct Node* startNode = getNode();
 	startNode->name = start;
@@ -45,6 +59,8 @@ struct Rule* setRule(FILE *grammmarList, char *start, struct Rule* rule){
 	rule->start = startNode;
 	struct Node* newNode;
 	struct Node* temp; 
+	struct NodeList *newNodeList,*tempList;
+	int flag=0;
 	char *name = (char*)malloc(sizeof(char)*100);
 	while(fscanf(grammmarList,"%s",name)!=EOF){
 		// printf("%s ",name);
@@ -52,18 +68,36 @@ struct Rule* setRule(FILE *grammmarList, char *start, struct Rule* rule){
 			// printf("\n");
 			return rule;
 		}
+
+		if(strcmp(name,"|")==0){
+			flag=1;
+			continue;
+		}
+
 		temp = getNode();
 		temp->name = name;
 		temp->is_token = checkToken(name);
 		temp->next=NULL;
 		if(rule->rule_list==NULL) {
 			newNode = temp;
-			rule->rule_list = newNode;
+			newNodeList = getNodeList();
+			newNodeList->node_list = newNode;
+			rule->rule_list = newNodeList; 
 		}
+		else if(flag==1){
+			tempList = getNodeList();
+			tempList->node_list = temp;
+			newNode = temp;
+			newNodeList->nextList = tempList;
+			newNodeList = tempList;
+			flag=0;
+		}
+
 		else{
 			newNode->next=temp;
 			newNode=temp;
 		}
+
 		name = (char*)malloc(sizeof(char)*100);
 	}
 	return rule;
@@ -80,7 +114,7 @@ struct Grammar* makeGrammar(char* filename){
 	struct Rule *newRule;
 	struct Rule *temp;
 	
-	if(grammmarList==NULL) printf("FIle is NULL");
+	if(grammmarList==NULL) printf("File is NULL");
 	while(fscanf(grammmarList,"%s",start)!=EOF){
 		// printf("%s ",start);
 		temp = getRule();
@@ -105,20 +139,25 @@ void printGrammar(struct Grammar* grammar){
 	struct Rule *tempRule = grammar->rules;
 	while(tempRule!=NULL){
 		printf("%s --> ",tempRule->start->name);
-		struct Node* tempNode = tempRule->rule_list;
-		while(tempNode!=NULL){
-			printf("%s ",tempNode->name);
-			tempNode=tempNode->next;
+		struct NodeList* tempNodeList = tempRule->rule_list;
+		while(tempNodeList!=NULL){
+			struct Node* tempNode = tempNodeList->node_list;
+			while(tempNode!=NULL){
+				printf("%s ",tempNode->name);
+				tempNode=tempNode->next;
+			}
+			tempNodeList = tempNodeList->nextList;
+			if(tempNodeList!=NULL) printf("\n%s --> ",tempRule->start->name);
 		}
 		printf("\n");
 		tempRule = tempRule->nextRule;
 	}
 }
 
-int main(int argc, char const *argv[])
-{
-	char *filename = "grammar_list";
-	struct Grammar* grammar = makeGrammar(filename);
-	printGrammar(grammar);
-	return 0;
-}
+// int main(int argc, char const *argv[])
+// {
+// 	char *filename = "grammar_list";
+// 	struct Grammar* grammar = makeGrammar(filename);
+// 	printGrammar(grammar);
+// 	return 0;
+// }
