@@ -19,14 +19,11 @@
 #include <string.h>
 #include <ctype.h>
 #include "keywords.h"
-
+#include "lexerDef.h"
 char* toUpper(char* keyword){
 	int len = strlen(keyword);
 	int i;
 	char* keyword_upper = (char*)malloc(sizeof(char)*len);
-	// for(i=0;i<len;i++){
-	// 	keyword_upper[i] = '\0';
-	// }
 	for(i=0;i<len;i++){
 		char c = (char)toupper(keyword[i]);
 		keyword_upper[i] = c;
@@ -35,6 +32,7 @@ char* toUpper(char* keyword){
 }
 int hashkey(char* keyword){
 	int len = strlen(keyword);
+	if(keyword[len-1] == '\n')keyword[len-1] = '\0';
 	int i=0;int power = 1;
 	int hash = 0;
 	while(i<len){
@@ -52,6 +50,8 @@ node** createHashTable(){
 	return hash_table;
 }
 node* createNode(char* keyword){
+	int len = strlen(keyword);
+	if(keyword[len-1] == '\n')keyword[len-1] = '\0';
 	node* n = (node*)malloc(sizeof(node));
 	n->keyword = (char*)malloc(sizeof(char)*(1+strlen(keyword)));
 	n->keyword_token = (char*)malloc(sizeof(char)*KEYWORD_SIZE);
@@ -85,10 +85,11 @@ void insertNode(node** emptyHashTable, node* n, int hash){
 }
 node** populateHashTable(node** emptyHashTable, FILE* f){
 	//FILE* f = fopen(KEYWORD_FILE, "r");
-	char keyword[KEYWORD_SIZE];
-	while(fgets(keyword, KEYWORD_SIZE, f) != NULL){
+	char keyword[KEYWORD_SIZE+1];
+	//int read;
+	while(fgets(keyword, KEYWORD_SIZE, f)!= NULL){
+		
 		int len = strlen(keyword);
-		keyword[len-1]  = '\0';
 		int hash = hashkey(keyword);
 		node* n = createNode(keyword);
 		insertNode(emptyHashTable, n, hash);
@@ -105,7 +106,7 @@ void printHashTable(node** hashTable){
 			printf("%d ------",i);
 			node* n = hashTable[i];
 			while(n->next != NULL){
-				printf("%s  %s\t",n->keyword_token,n->keyword);
+				printf("%s %s ",n->keyword_token,n->keyword);
 				n = n->next;
 			}
 			printf("%s  %s\n",n->keyword_token,n->keyword);
@@ -115,12 +116,18 @@ void printHashTable(node** hashTable){
 }
 
 char* checkKeyword(node** hash_table, char* keyword){
+	//(";lkdafj;dlskjfa;lsdkj\n");
+	int len = strlen(keyword);
+	if(keyword[len-1] == '\n')keyword[len-1] = '\0';
 	int hash = hashkey(keyword);
+	//printf("%d\n",hash);
+	char* c = (char*)malloc(sizeof(char)*MAX_TOKEN_LEN);
 	if(hash_table[hash] == NULL) return NULL;
 	else{
 		node* n = hash_table[hash];
 		while(n != NULL){
-			if(strcmp(n->keyword, keyword) == 0)return n->keyword_token;
+			//printf("-------------------- %s\n",n->keyword);
+			if(!strcmp(n->keyword, keyword)){strcpy(c,n->keyword_token); return c;}
 			else{
 				n = n->next;
 			}

@@ -71,7 +71,7 @@ int isDelim(char c){
 	else return FALSE;
 }
 void flushToken(){while(!isDelim(*forward))updateForwardPointer();}
-void panicRecovery(){while(!isDelim(*forward))updateForwardPointer();}
+
 /*
 FILE* getStream(FILE* fp,char** B, buffersize buf_size){
 	if(!first_flag){initializeBuffer(B,fp,buf_size);first_flag=1;}
@@ -102,6 +102,7 @@ void initializeBuffer(char** buffers,FILE* fp,buffersize buf_size){
 	int read  = reloadBuffer(buffers,fp, buf_size);
 	int read2 = reloadBuffer(buffers, fp, buf_size);
 	forward = &buffers[curr_buff][0];
+	lexeme_begin = forward;
 	lookahead = forward+1;
 	curr_state = 0;
 	return;
@@ -165,6 +166,7 @@ float str_to_real(char* str){
 	int len = strlen(str);
 	return ans;
 }
+void panicRecovery(){while(!isDelim(*forward))updateForwardPointer();}
 
 tokenInfo* fillToken(char* def_token, char* lexeme_begin, char* forward,int type){
 	tokenInfo* token = (tokenInfo*)malloc(sizeof(tokenInfo));
@@ -174,6 +176,8 @@ tokenInfo* fillToken(char* def_token, char* lexeme_begin, char* forward,int type
 	token->token_no = token_no;
 	strcpy(token->token_name, def_token);
 	copyString(token->lexeme,lexeme_begin, forward);
+	//printf("%s\n",token->lexeme);
+
 	char* c = checkKeyword(lookup_table, token->lexeme);
 	if(c != NULL)strcpy(token->token_name,c);
 
@@ -200,300 +204,307 @@ tokenInfo* fillToken(char* def_token, char* lexeme_begin, char* forward,int type
 }
 
 tokenInfo* getNextToken(FILE* fp){
-	lexeme_begin = forward;
-	tokenInfo* curr_token;
-	if(*forward == '$'){printf("%s\n","TK_DOLLAR\n");} 
-	else if(*forward == '\0'){updateForwardPointer();} //buffer completely filled but source code not finished---> Reload buffers.
-	else{
-		switch(*forward)
-		{
-			case '%' :
-				if(curr_state==0){
-					printf("TK_COMMENT\n");
-					//updateForwardPointer();printf("%c",*forward);
-					curr_token = fillToken("TK_COMMENT",lexeme_begin,forward,OTHER);
-					while(*forward != '\n'){updateForwardPointer();}//printf("%c",*forward);}
-					if(*forward == '\n'){line_no++;updateForwardPointer();}
-					
-					return curr_token;
-				}
+	tokenInfo* curr_token = NULL;
+		
+		if(*forward == '$'){curr_token = fillToken("TK_DOLLAR",lexeme_begin,forward,OTHER);} 
+		else if(*forward == '\0'){updateForwardPointer();} //buffer completely filled but source code not finished---> Reload buffers.
+		else{
+			switch(*forward)
+			{
+				case '%' :
+					if(curr_state==0){
+						//printf("%s\n","------------------" );
+						//updateForwardPointer();printf("%c",*forward);
+						curr_token = fillToken("TK_COMMENT",lexeme_begin,forward,OTHER);
+						//printf("%s\n","------------------" );
+						while(*forward != '\n'){updateForwardPointer();}//rintf("%c",*forward);
+						if(*forward == '\n'){line_no++;updateForwardPointer();}
+							
+					//return curr_token;
+					}
+					else{
+						//ERROR;
+						printf("Unexpected Input %c and line %d\n",*forward,line_no);
+						panicRecovery(fp);
+						errors++;
+					}
+					break;
+				case '[' :
+					if(curr_state==0){
+						curr_token=fillToken("TK_SQL",lexeme_begin,forward,OTHER);
+						updateForwardPointer();}
+					else{
+						//ERROR;
+						errors++;
+					}
+					break;
+				case '_':
+					if(curr_state == 0){curr_state = 36;updateForwardPointer();}//printf("%c\n",*forward);printf("%c\n",*lookahead);}
+					else{
+							//error;
+					}
+				break;
+				case ']' : 
+					if(curr_state==0){curr_token = fillToken("TK_SQR",lexeme_begin,forward,OTHER);updateForwardPointer();}
+					else{
+						//ERROR
+						errors++;
+					}
+					break;
+				case ';' :
+					if(curr_state==0){curr_token = fillToken("TK_SEM",lexeme_begin,forward,OTHER);updateForwardPointer();}
+					else{
+						//ERROR
+						errors++;
+					}
+						break;
+				case ':':
+					if(curr_state==0){curr_token = fillToken("TK_COLON",lexeme_begin,forward,OTHER);updateForwardPointer();}
 				else{
-					//ERROR;
-					printf("Unexpected Input %c and line %d\n",*forward,line_no);
-					panicRecovery(fp);
-					errors++;
-				}
+						//ERROR
+						errors++;
+					}
+					break;
+				case '.':
+					if(curr_state==0){curr_token = fillToken("TK_DOT",lexeme_begin,forward,OTHER);}
+					else if(curr_state == 31){curr_state = 32;}
+					else{
+						//ERROR
+						errors++;
+					}
+					updateForwardPointer();
+					break;
+				case ',': 
+					if(curr_state == 0){curr_token = fillToken("TK_COMMA",lexeme_begin,forward,OTHER);updateForwardPointer();}
+					else{
+						//ERROR
+						errors++;
+					}
+					break;
+				case '(':
+					if(curr_state==0){curr_token = fillToken("TK_OP",lexeme_begin,forward,OTHER);updateForwardPointer();}
+					else{
+						//ERROR
+						errors++;
+					}
+					break;
+				case ')':
+					if(curr_state==0){curr_token = fillToken("TK_CL",lexeme_begin,forward,OTHER);updateForwardPointer();}
+					else{
+						//ERROR
+						errors++;
+					}
+					break;
+				case '+':
+					if(curr_state==0){curr_token = fillToken("TK_PLUS",lexeme_begin,forward,OTHER);updateForwardPointer();}
+					else{
+						//ERROR
+						errors++;
+					}
+					break;
+				case '*':
+					if(curr_state==0){curr_token = fillToken("TK_MUL",lexeme_begin,forward,OTHER);updateForwardPointer();}
+					else{
+						//ERROR
+						errors++;
+					}
+					break;
+				case '-':
+					if(curr_state==0){curr_token = fillToken("TK_MINUS",lexeme_begin,forward,OTHER);}
+					else if(curr_state == 20)curr_state = 21;
+					else if(curr_state == 21)curr_state = 22;
+					else if(curr_state == 22){curr_state = 0;curr_token = fillToken("TK_ASSIGNOP",lexeme_begin,forward,OTHER);}
+					else{
+						//ERROR
+						errors++;
+					}
+					updateForwardPointer();
+					break;
+				case '/':
+					if(curr_state==0){curr_token = fillToken("TK_DIV",lexeme_begin,forward,OTHER);updateForwardPointer();}
+					else{
+						//ERROR
+						errors++;
+					}
+					break;
+				case '&':
+					if(curr_state==0)curr_state=13;
+					else if(curr_state == 13)curr_state++;
+					else if(curr_state==14)curr_state++;
+					else{
+						//ERROR;
+						errors++;
+					}
+					if(curr_state == 15){curr_token = fillToken("TK_AND",lexeme_begin,forward,OTHER);curr_state=0;}
+					updateForwardPointer();
+					break;
+				case '@':
+					if(curr_state==0)curr_state=16;
+					else if(curr_state == 16)curr_state++;
+					else if(curr_state==17)curr_state++;
+					else{
+						//ERROR;
+						errors++;
+					}
+					if(curr_state == 18){curr_token = fillToken("TK_OR",lexeme_begin,forward,OTHER);curr_state=0;}
+					updateForwardPointer();
+					break;
+				case '~':
+					if(curr_state==0){curr_token = fillToken("TK_NOT",lexeme_begin,forward,OTHER);updateForwardPointer();}
+					else{
+						//Error;
+						errors++;
+					}
+					break;
+				case '<':
+					if(curr_state == 0){curr_state = 20;if(*lookahead != '=' && *lookahead != '-'){curr_token = fillToken("TK_LT",lexeme_begin,forward,OTHER);curr_state=0;}}
+					updateForwardPointer();
+					break;
+				case '>':
+					if(curr_state == 0){curr_state = 27;if(*lookahead != '='){curr_token = fillToken("TK_GT",lexeme_begin,forward,OTHER);curr_state=0;}}
+					updateForwardPointer();
+				case '=':
+					if(curr_state == 0)curr_state=25;
+					else if(curr_state == 20){curr_token = fillToken("TK_LE",lexeme_begin,forward,OTHER);curr_state=0;}
+					else if(curr_state== 27){curr_token = fillToken("TK_GE",lexeme_begin,forward,OTHER);curr_state=0;}
+					else if(curr_state == 25){curr_token = fillToken("TK_EQ",lexeme_begin,forward,OTHER);curr_state=0;}
+					else if(curr_state == 29){curr_token = fillToken("TK_NE",lexeme_begin,forward,OTHER);curr_state=0;}
+					updateForwardPointer();
+					break;
+				case '2' ... '7':
+					if(curr_state == 0){curr_state = 31;if(*lookahead != '.' && isDelim(*lookahead)){curr_token = fillToken("TK_NUM",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 31){curr_state = 31;if(*lookahead != '.' && isDelim(*lookahead)){curr_token = fillToken("TK_NUM",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 32){curr_state = 33;if(isDelim(*lookahead)){curr_token = fillToken("TK_RNUM",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 33){curr_state = 33;if(isDelim(*lookahead)){curr_token = fillToken("TK_RNUM",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 37){curr_state = 38;if(isDelim(*lookahead)){curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 38){curr_state = 38;if(isDelim(*lookahead)){curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 40){curr_state = 41;if(isDelim(*lookahead)){curr_token = fillToken("TK_ID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 41){curr_state = 42;if(isDelim(*lookahead)){curr_token = fillToken("TK_ID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 42){curr_state = 42;if(isDelim(*lookahead)){curr_token = fillToken("TK_ID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else{
+						//ERROR;
+						errors++;
+					}
+					updateForwardPointer();
+					break;
+				case '0' ... '1':
+					if(curr_state == 0){curr_state = 31;if(*lookahead != '.' && isDelim(*lookahead)){curr_token = fillToken("TK_NUM",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 31){curr_state = 31;if(*lookahead != '.' && isDelim(*lookahead)){printf("TK_NUM\n");curr_token = fillToken("TK_NUM",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 32){curr_state = 33;if(isDelim(*lookahead)){curr_token = fillToken("TK_RNUM",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 33){curr_state = 33;if(isDelim(*lookahead)){curr_token = fillToken("TK_RNUM",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 37){curr_state = 38;if(isDelim(*lookahead)){curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 38){curr_state = 38;if(isDelim(*lookahead)){curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					updateForwardPointer();
+					break;
+					//When to return this token, when you see a delimiter etc....
+				case '8' ... '9':
+					if(curr_state == 0){curr_state = 31;if(*lookahead != '.' && isDelim(*lookahead)){curr_token = fillToken("TK_NUM",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 31){curr_state = 31;if(*lookahead != '.' && isDelim(*lookahead)){printf("TK_NUM\n");curr_token = fillToken("TK_NUM",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 32){curr_state = 33;if(isDelim(*lookahead)){curr_token = fillToken("TK_RNUM",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 33){curr_state = 33;if(isDelim(*lookahead)){curr_token = fillToken("TK_RNUM",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 37){curr_state = 38;if(isDelim(*lookahead)){curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 38){curr_state = 38;if(isDelim(*lookahead)){curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					updateForwardPointer();
+					break;
+				case 'b' ... 'd':
+					if(curr_state == 0)curr_state=40;
+					else if(curr_state == 34){curr_state = 35;if(isDelim(*lookahead)){curr_token = fillToken("TK_RECORDID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 35){curr_state = 35;if(isDelim(*lookahead)){curr_token = fillToken("TK_RECORDID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 36){curr_state = 37;if(isDelim(*lookahead)){curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 37){curr_state = 37;if(isDelim(*lookahead)){curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 39){curr_state = 39;if(isDelim(*lookahead)){curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 40){curr_state = 39;if(isDelim(*lookahead)){curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 41){curr_state = 41;if(isDelim(*lookahead)){curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else{
+						//ERROR
+						errors++;
+					}
+					updateForwardPointer();
+					break;
+				case 'a':
+					if(curr_state == 0){curr_state = 39;if(isDelim(*lookahead)) {curr_token = fillToken("TK_FIELDID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 34){curr_state = 35;if(isDelim(*lookahead)) {curr_token = fillToken("TK_RECORDID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 35){curr_state = 35;if(isDelim(*lookahead)) {curr_token = fillToken("TK_RECORDID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 36){curr_state = 37;if(isDelim(*lookahead)) {curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 37){curr_state = 37;if(isDelim(*lookahead)) {curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 39){curr_state = 39;if(isDelim(*lookahead)) {curr_token = fillToken("TK_FIELDID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 40){curr_state = 39;if(isDelim(*lookahead)) {curr_token = fillToken("TK_FIELDID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else{
+						//ERROR
+						errors++;
+					}
+					updateForwardPointer();
+					//printf("%c\n",*forward);
+					//printf("%c\n",*lookahead);
+					break;
+				case 'e' ... 'z':
+					//if(*forward == 'o'){printf("O Reached\n");}
+					if(curr_state == 0){curr_state = 39;if(isDelim(*lookahead)) {curr_token = fillToken("TK_FIELDID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 39){curr_state = 39;if(isDelim(*lookahead)) {curr_token = fillToken("TK_FIELDID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 40){curr_state = 39;if(isDelim(*lookahead)) {curr_token = fillToken("TK_FIELDID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 35){curr_state = 35;if(isDelim(*lookahead)) {curr_token = fillToken("TK_RECORDID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 37){curr_state = 37;if(isDelim(*lookahead)) {curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 34){curr_state = 35;if(isDelim(*lookahead)) {curr_token = fillToken("TK_RECORDID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 36){curr_state = 37;if(isDelim(*lookahead)) {curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else{
+						//ERROR
+						errors++;
+					}
+					updateForwardPointer();
+					//printf("%c \t %c\n",*forward,*lookahead);
+					//printf("%c\n",*lookahead);
+					break;
+					case '!':
+					if(curr_state == 0)curr_state = 29;
+					else{
+						//ERROR;
+					}
+					updateForwardPointer();
+					break;
+				case '\n':
+					if(curr_state == 0)line_no++;
+					updateForwardPointer();
+					lexeme_begin = forward;
+					break;
+				case '\r':
+					if(curr_state==0)
+					updateForwardPointer();
+					lexeme_begin = forward;
+					break;
+				case 'A' ... 'Z':
+					if(curr_state == 36){curr_state = 37;if(isDelim(*lookahead)){curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else if(curr_state == 37){curr_state = 37;if(isDelim(*lookahead)){curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
+					else{
+						//ERROR
+						errors++;
+					}
+					updateForwardPointer();
+					break;
+				case '#':
+					if(curr_state == 0){curr_state = 34;updateForwardPointer();}
+					else{
+						//ERROR
+						errors++;
+					}
+					break;
+				case ' ':
+					updateForwardPointer();
+					lexeme_begin = forward;
+					break;
+				case '\t':
+					updateForwardPointer();
+					lexeme_begin = forward;
+					break;
+				default:
+					printf("Encountered Unknown Symbol '%c' at line %d\n",*forward,line_no);
+					updateForwardPointer();
+					lexeme_begin = forward;
 				break;
-			case '[' :
-				if(curr_state==0){printf("%s\n","TK_SQL");
-					curr_token=fillToken("TK_SQL",lexeme_begin,forward,OTHER);
-					updateForwardPointer();}
-				else{
-					//ERROR;
-					errors++;
-				}
-				break;
-			case '_':
-				if(curr_state == 0){curr_state = 36;updateForwardPointer();}//printf("%c\n",*forward);printf("%c\n",*lookahead);}
-				else{
-					//error;
-				}
-				break;
-			case ']' : 
-				if(curr_state==0){printf("%s\n","TK_SQR");curr_token = fillToken("TK_SQR",lexeme_begin,forward,OTHER);updateForwardPointer();}
-				else{
-					//ERROR
-					errors++;
-				}
-				break;
-			case ';' :
-				if(curr_state==0){printf("%s\n","TK_SEM");curr_token = fillToken("TK_SEM",lexeme_begin,forward,OTHER);updateForwardPointer();}
-				else{
-					//ERROR
-					errors++;
-				}
-				break;
-			case ':':
-				if(curr_state==0){printf("%s\n","TK_COLON");curr_token = fillToken("TK_COLON",lexeme_begin,forward,OTHER);updateForwardPointer();}
-				else{
-					//ERROR
-					errors++;
-				}
-				break;
-			case '.':
-				if(curr_state==0){printf("%s\n","TK_DOT");curr_token = fillToken("TK_DOT",lexeme_begin,forward,OTHER);}
-				else if(curr_state == 31){curr_state = 32;}
-				else{
-					//ERROR
-					errors++;
-				}
-				updateForwardPointer();
-				break;
-			case ',': 
-				if(curr_state == 0){printf("%s\n","TK_COMMA");curr_token = fillToken("TK_COMMA",lexeme_begin,forward,OTHER);updateForwardPointer();}
-				else{
-					//ERROR
-					errors++;
-				}
-				break;
-			case '(':
-				if(curr_state==0){printf("%s\n","TK_OP");curr_token = fillToken("TK_OP",lexeme_begin,forward,OTHER);updateForwardPointer();}
-				else{
-					//ERROR
-					errors++;
-				}
-				break;
-			case ')':
-				if(curr_state==0){printf("%s\n","TK_CL");curr_token = fillToken("TK_CL",lexeme_begin,forward,OTHER);updateForwardPointer();}
-				else{
-					//ERROR
-					errors++;
-				}
-				break;
-			case '+':
-				if(curr_state==0){printf("%s\n","TK_PLUS");curr_token = fillToken("TK_PLUS",lexeme_begin,forward,OTHER);updateForwardPointer();}
-				else{
-					//ERROR
-					errors++;
-				}
-				break;
-			case '*':
-				if(curr_state==0){printf("%s\n","TK_MUL");curr_token = fillToken("TK_MUL",lexeme_begin,forward,OTHER);updateForwardPointer();}
-				else{
-					//ERROR
-					errors++;
-				}
-				break;
-			case '-':
-				if(curr_state==0){printf("%s\n","TK_MINUS");curr_token = fillToken("TK_MINUS",lexeme_begin,forward,OTHER);}
-				else if(curr_state == 20)curr_state = 21;
-				else if(curr_state == 21)curr_state = 22;
-				else if(curr_state == 22){curr_state = 0;printf("TK_ASSIGNOP\n");curr_token = fillToken("TK_ASSIGNOP",lexeme_begin,forward,OTHER);}
-				else{
-					//ERROR
-					errors++;
-				}
-				updateForwardPointer();
-				break;
-			case '/':
-				if(curr_state==0){printf("%s\n","TK_DIV");curr_token = fillToken("TK_DIV",lexeme_begin,forward,OTHER);updateForwardPointer();}
-				else{
-					//ERROR
-					errors++;
-				}
-				break;
-			case '&':
-				if(curr_state==0)curr_state=13;
-				else if(curr_state == 13)curr_state++;
-				else if(curr_state==14)curr_state++;
-				else{
-					//ERROR;
-					errors++;
-				}
-				if(curr_state == 15){printf("%s\n","TK_AND");curr_token = fillToken("TK_AND",lexeme_begin,forward,OTHER);curr_state=0;}
-				updateForwardPointer();
-				break;
-			case '@':
-				if(curr_state==0)curr_state=16;
-				else if(curr_state == 16)curr_state++;
-				else if(curr_state==17)curr_state++;
-				else{
-					//ERROR;
-					errors++;
-				}
-				if(curr_state == 18){printf("%s\n","TK_OR");curr_token = fillToken("TK_OR",lexeme_begin,forward,OTHER);curr_state=0;}
-				updateForwardPointer();
-				break;
-			case '~':
-				if(curr_state==0){printf("%s\n","TK_NOT");curr_token = fillToken("TK_NOT",lexeme_begin,forward,OTHER);updateForwardPointer();}
-				else{
-					//Error;
-					errors++;
-				}
-				break;
-			case '<':
-				if(curr_state == 0){curr_state = 20;if(*lookahead != '=' && *lookahead != '-'){printf("%s\n","TK_LT");curr_token = fillToken("TK_LT",lexeme_begin,forward,OTHER);curr_state=0;}}
-				updateForwardPointer();
-				break;
-			case '>':
-				if(curr_state == 0){curr_state = 27;if(*lookahead != '='){printf("%s\n","TK_GT");curr_token = fillToken("TK_GT",lexeme_begin,forward,OTHER);curr_state=0;}}
-				updateForwardPointer();
-			case '=':
-				if(curr_state == 0)curr_state=25;
-				else if(curr_state == 20){printf("%s\n","TK_LE");curr_token = fillToken("TK_LE",lexeme_begin,forward,OTHER);curr_state=0;}
-				else if(curr_state== 27){printf("%s\n","TK_GE");curr_token = fillToken("TK_GE",lexeme_begin,forward,OTHER);curr_state=0;}
-				else if(curr_state == 25){printf("%s\n","TK_EQ");curr_token = fillToken("TK_EQ",lexeme_begin,forward,OTHER);curr_state=0;}
-				else if(curr_state == 29){printf("TK_NE\n");curr_token = fillToken("TK_NE",lexeme_begin,forward,OTHER);curr_state=0;}
-				updateForwardPointer();
-				break;
-			case '2' ... '7':
-				if(curr_state == 0){curr_state = 31;if(*lookahead != '.' && isDelim(*lookahead)){printf("TK_NUM\n");curr_token = fillToken("TK_NUM",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 31){curr_state = 31;if(*lookahead != '.' && isDelim(*lookahead)){printf("TK_NUM\n");curr_token = fillToken("TK_NUM",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 32){curr_state = 33;if(isDelim(*lookahead)){printf("TK_RNUM\n");curr_token = fillToken("TK_RNUM",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 33){curr_state = 33;if(isDelim(*lookahead)){printf("TK_RNUM\n");curr_token = fillToken("TK_RNUM",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 37){curr_state = 38;if(isDelim(*lookahead)){printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 38){curr_state = 38;if(isDelim(*lookahead)){printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 40){curr_state = 41;if(isDelim(*lookahead)){printf("TK_ID\n");curr_token = fillToken("TK_ID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 41){curr_state = 42;if(isDelim(*lookahead)){printf("TK_ID\n");curr_token = fillToken("TK_ID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 42){curr_state = 42;if(isDelim(*lookahead)){printf("TK_ID\n");curr_token = fillToken("TK_ID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else{
-					//ERROR;
-					errors++;
-				}
-				updateForwardPointer();
-				break;
-			case '0' ... '1':
-				if(curr_state == 0){curr_state = 31;if(*lookahead != '.' && isDelim(*lookahead)){printf("TK_NUM\n");curr_token = fillToken("TK_NUM",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 31){curr_state = 31;if(*lookahead != '.' && isDelim(*lookahead)){printf("TK_NUM\n");curr_token = fillToken("TK_NUM",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 32){curr_state = 33;if(isDelim(*lookahead)){printf("TK_RNUM\n");curr_token = fillToken("TK_RNUM",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 33){curr_state = 33;if(isDelim(*lookahead)){printf("TK_RNUM\n");curr_token = fillToken("TK_RNUM",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 37){curr_state = 38;if(isDelim(*lookahead)){printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 38){curr_state = 38;if(isDelim(*lookahead)){printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				updateForwardPointer();
-				break;
-				//When to return this token, when you see a delimiter etc....
-			case '8' ... '9':
-				if(curr_state == 0){curr_state = 31;if(*lookahead != '.' && isDelim(*lookahead)){printf("TK_NUM\n");curr_token = fillToken("TK_NUM",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 31){curr_state = 31;if(*lookahead != '.' && isDelim(*lookahead)){printf("TK_NUM\n");curr_token = fillToken("TK_NUM",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 32){curr_state = 33;if(isDelim(*lookahead)){printf("TK_RNUM\n");curr_token = fillToken("TK_RNUM",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 33){curr_state = 33;if(isDelim(*lookahead)){printf("TK_RNUM\n");curr_token = fillToken("TK_RNUM",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 37){curr_state = 38;if(isDelim(*lookahead)){printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 38){curr_state = 38;if(isDelim(*lookahead)){printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				updateForwardPointer();
-				break;
-			case 'b' ... 'd':
-				if(curr_state == 0)curr_state=40;
-				else if(curr_state == 34){curr_state = 35;if(isDelim(*lookahead)){printf("TK_RECORDID\n");curr_token = fillToken("TK_RECORDID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 35){curr_state = 35;if(isDelim(*lookahead)){printf("TK_RECORDID\n");curr_token = fillToken("TK_RECORDID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 36){curr_state = 37;if(isDelim(*lookahead)){printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 37){curr_state = 37;if(isDelim(*lookahead)){printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 39){curr_state = 39;if(isDelim(*lookahead)){printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 40){curr_state = 39;if(isDelim(*lookahead)){printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 41){curr_state = 41;if(isDelim(*lookahead)){printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else{
-					//ERROR
-					errors++;
-				}
-				updateForwardPointer();
-				break;
-			case 'a':
-				if(curr_state == 0){curr_state = 39;if(isDelim(*lookahead)) {printf("TK_FIELDID\n");curr_token = fillToken("TK_FIELDID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 34){curr_state = 35;if(isDelim(*lookahead)) {printf("TK_RECORDID\n");curr_token = fillToken("TK_RECORDID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 35){curr_state = 35;if(isDelim(*lookahead)) {printf("TK_RECORDID\n");curr_token = fillToken("TK_RECORDID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 36){curr_state = 37;if(isDelim(*lookahead)) {printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 37){curr_state = 37;if(isDelim(*lookahead)) {printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 39){curr_state = 39;if(isDelim(*lookahead)) {printf("TK_FIELDID\n");curr_token = fillToken("TK_FIELDID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 40){curr_state = 39;if(isDelim(*lookahead)) {printf("TK_FIELDID\n");curr_token = fillToken("TK_FIELDID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else{
-					//ERROR
-					errors++;
-				}
-				updateForwardPointer();
-				//printf("%c\n",*forward);
-				//printf("%c\n",*lookahead);
-				break;
-			case 'e' ... 'z':
-				//if(*forward == 'o'){printf("O Reached\n");}
-				if(curr_state == 0){curr_state = 39;if(isDelim(*lookahead)) {printf("TK_FIELDID\n");curr_token = fillToken("TK_FIELDID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 39){curr_state = 39;if(isDelim(*lookahead)) {printf("TK_FIELDID\n");curr_token = fillToken("TK_FIELDID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 40){curr_state = 39;if(isDelim(*lookahead)) {printf("TK_FIELDID\n");curr_token = fillToken("TK_FIELDID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 35){curr_state = 35;if(isDelim(*lookahead)) {printf("TK_RECORDID\n");curr_token = fillToken("TK_RECORDID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 37){curr_state = 37;if(isDelim(*lookahead)) {printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 34){curr_state = 35;if(isDelim(*lookahead)) {printf("TK_RECORDID\n");curr_token = fillToken("TK_RECORDID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 36){curr_state = 37;if(isDelim(*lookahead)) {printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else{
-					//ERROR
-					errors++;
-				}
-				updateForwardPointer();
-				//printf("%c \t %c\n",*forward,*lookahead);
-				//printf("%c\n",*lookahead);
-				break;
-			case '!':
-				if(curr_state == 0)curr_state = 29;
-				else{
-					//ERROR;
-				}
-				updateForwardPointer();
-				break;
-			case '\n':
-				if(curr_state == 0)line_no++;
-				updateForwardPointer();
-				break;
-			case '\r':
-				if(curr_state==0)
-				updateForwardPointer();
-				break;
-			case 'A' ... 'Z':
-				if(curr_state == 36){curr_state = 37;if(isDelim(*lookahead)){printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else if(curr_state == 37){curr_state = 37;if(isDelim(*lookahead)){printf("TK_FUNID\n");curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}}
-				else{
-					//ERROR
-					errors++;
-				}
-				updateForwardPointer();
-				break;
-			case '#':
-				if(curr_state == 0){curr_state = 34;updateForwardPointer();}
-				else{
-					//ERROR
-					errors++;
-				}
-				break;
-			case ' ':
-				updateForwardPointer();
-				break;
-			case '\t':
-				updateForwardPointer();
-				break;
-			default:
-				printf("Encountered Unknown Symbol '%c' at line %d\n",*forward,line_no);
-				updateForwardPointer();
-				break;
+			}
 		}
 		
-	}	
-	return NULL;
+	if(curr_token!=NULL) lexeme_begin = forward;
+	return curr_token;
 }
 
 
@@ -519,10 +530,11 @@ int main(int argc, char* argv[]){
 		if(inputFile==NULL){fprintf(stderr, "Error! Could not open the source code file %s\n",argv[1]);exit(-1);}
 		if(keywordFile==NULL){fprintf(stderr, "Error! Could not open the keywords containing file, Cannot populate lookup table without this file - %s\n",argv[1]);exit(-1);}
 		if(errorsFile == NULL || tokensFile == NULL){fprintf(stderr,"Error! Could not open the errors/tokens file\n");exit(-1);}
+
 		lookup_table = createHashTable();
 		lookup_table = populateHashTable(lookup_table, keywordFile);
 		// Lookup table has been initialized. Now need to start tokenizing..
-		
+		//printf("lkajdlfkjad\n");
 		//printHashTable(lookup_table);
 		//getNextToken(inputFile);
 		//initializeBuffer(buffers,inputFile,block_size);
@@ -533,9 +545,11 @@ int main(int argc, char* argv[]){
 		//getNextToken(inputFile);
 		tokenInfo* curr_token;
 		initializeBuffer(buffers,inputFile, block_size);
+		//printBuffers();
 		while(*forward!='$'){
+			
 			curr_token = getNextToken(inputFile);
-			//if(curr_token!=NULL)printf("%s\n",curr_token->token_name);
+			if(curr_token!=NULL)printf("%s %d %s\n",curr_token->token_name,curr_token->line_no,curr_token->lexeme);
 		}
 		//getNextToken(inputFile);
 	}
@@ -556,11 +570,9 @@ int main(){
 // }*/
 
 // int main(){
-// 	char* str;
-// 	str = (char*)malloc(sizeof(char)*100);
-// 	strcpy(str,"Aditya and Abhinav are making a Compiler as part of the Compiler Project\n");
-// 	tokenInfo* curr_token = (tokenInfo*)malloc(sizeof(tokenInfo));
-// 	curr_token = fillToken("yoyoyoyo",str,str+15,OTHER);
-// 	printf("%s\n",curr_token->token_name);
-// 	printf("%s\n",curr_token->lexeme);
+// 	keywordFile = fopen(KEYWORD_FILE, "r");
+// 	lookup_table = createHashTable();
+// 	lookup_table = populateHashTable(lookup_table, keywordFile);
+// 	printHashTable(lookup_table);
+// 	printf("%s\n",checkKeyword(lookup_table, "endwhile"));
 // }
