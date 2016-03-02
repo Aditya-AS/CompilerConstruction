@@ -1,21 +1,10 @@
 #define ERRORS_FILE "ERRORS.txt"
 #define TOKENS_FILE "TOKENS.txt"
+#define TOTAL_STATES 50
 #define NEWLINE "\n"
 #define TRUE 1
 #define FALSE 0
 
-
-struct tokenInfo{
-	char token_name[30];
-	char identifier[30];
-	int isGlobal;
-	int lineno;
-	int colno;
-	int tokenno;	
-	TYPE type;
-	//value of the identifier....
-};
-typedef struct tokenInfo tokenInfo;
 
 typedef enum{
 TK_ASSIGNOP,TK_COMMENT,TK_FIELDID,TK_ID,TK_NUM,TK_RNUM,TK_FUNID,TK_RECORDID,TK_WITH,
@@ -24,9 +13,7 @@ TK_LIST,TK_SQL,TK_SQR,TK_INPUT,TK_OUTPUT,TK_SEM,TK_COLON,TK_DOT,TK_ENDWHILE,TK_O
 TK_CL,TK_IF,TK_THEN,TK_ENDIF,TK_READ,TK_WRITE,TK_RETURN,TK_PLUS,TK_MINUS,TK_MUL,
 TK_DIV,TK_CALL,TK_RECORD,TK_ENDRECORD,TK_ELSE,TK_AND,TK_OR,TK_NOT,TK_LT,TK_LE,TK_EQ,
 TK_GT,TK_NE}tokens;
-
 typedef enum{INT, REAL, RECORD}TYPE;
-
 struct symbol_table{
 	int lineno;
 	int colno;
@@ -36,10 +23,10 @@ struct symbol_table{
 };
 typedef struct symbol_table symbol_table;
 
-typedef char** buffer;
-typedef int buffersize;
+
 /*struct tokenInfo{
 	char* tokenname;
 	symbol_table* sym_entry;
 };*/
+
 

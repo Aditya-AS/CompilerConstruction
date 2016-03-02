@@ -14,15 +14,11 @@
  4. Function to search the hash table for presence of a certain keyword.
  5. Function to print the hash table for debugging.
  */
-
- /*Storing of the keywords in a hash table*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include "keywords.h"
-
 
 char* toUpper(char* keyword){
 	int len = strlen(keyword);
@@ -40,7 +36,7 @@ char* toUpper(char* keyword){
 int hashkey(char* keyword){
 	int len = strlen(keyword);
 	int i=0;int power = 1;
-	int hash = len-1;
+	int hash = 0;
 	while(i<len){
 		hash += keyword[i]*power;
 		i++;
@@ -109,30 +105,29 @@ void printHashTable(node** hashTable){
 			printf("%d ------",i);
 			node* n = hashTable[i];
 			while(n->next != NULL){
-				printf("%s  ",n->keyword_token);
+				printf("%s  %s\t",n->keyword_token,n->keyword);
 				n = n->next;
 			}
-			printf("%s  \n",n->keyword_token);
+			printf("%s  %s\n",n->keyword_token,n->keyword);
 		}
 		i++;
 	}
 }
-int checkKeyword(node** hash_table, char* keyword){
+
+char* checkKeyword(node** hash_table, char* keyword){
 	int hash = hashkey(keyword);
-	if(hash_table[hash] == NULL) return 0;
+	if(hash_table[hash] == NULL) return NULL;
 	else{
 		node* n = hash_table[hash];
 		while(n != NULL){
-			if(strcmp(n->keyword, keyword) == 0)return 1;
+			if(strcmp(n->keyword, keyword) == 0)return n->keyword_token;
 			else{
 				n = n->next;
 			}
 		}
-		return 0;
+		return NULL;
 	}
 }
-
-
 
 /*
 int main(){
@@ -143,7 +138,8 @@ int main(){
 	hash_table = populateHashTable(hash_table, f);
 	
 	printHashTable(hash_table);
-	//printf("%d\n", checkKeyword(hash_table, "endwhilea"));
+
+	printf("%p\n", checkKeyword(hash_table, "endwhilea"));
 
 	// while(fgets(keyword, 30, f) != NULL){
 	// 	int len = strlen(keyword);
