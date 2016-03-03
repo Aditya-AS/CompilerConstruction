@@ -104,9 +104,9 @@ struct set* checkFollowSet(struct Grammar* grammar,struct firstSetList* firstSet
 	struct set* temp = getSet();
 	struct set* temp2 = getSet();
 
-	if(strcmp(name,"<program>")==0){
+	if(strcmp(name,"program")==0){
 			temp = getSet();
-			temp->element = "$";
+			temp->element = "TK_DOLLAR";
 			temp->nextElement = NULL;
 			return temp;
 		}
@@ -206,7 +206,7 @@ void printFollowSet(struct followSetList* sets){
 	struct firstSet* temp = sets->setList;
 	// printf("\n\n");
 	while(temp!=NULL){
-		printf("%s --> ",temp->setOf);
+		printf("%s ",temp->setOf);
 		struct set* tempSet = temp->elementList;
 		while(tempSet!=NULL){
 			printf("%s ",tempSet->element);
@@ -263,13 +263,13 @@ struct followSetList* removeDup(struct followSetList* sets){
 	return followSets;
 }
 
-int main(int argc, char const *argv[])
-{
-	char *filename = "grammar_list";
-	struct Grammar* grammar = makeGrammar(filename);
-	struct firstSetList* sets = makeFirstSetList(grammar);
-	struct followSetList* followSets = makeFollowSetList(grammar,sets);
-	followSets = removeDup(followSets);
-	printFollowSet(followSets);
-	return 0;
-}
+// int main(int argc, char const *argv[])
+// {
+// 	char *filename = "grammar_list";
+// 	struct Grammar* grammar = makeGrammar(filename);
+// 	struct firstSetList* sets = makeFirstSetList(grammar);
+// 	struct followSetList* followSets = makeFollowSetList(grammar,sets);
+// 	followSets = removeDup(followSets);
+// 	printFollowSet(followSets);
+// 	return 0;
+// }
