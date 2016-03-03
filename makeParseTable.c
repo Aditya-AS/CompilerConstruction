@@ -6,6 +6,8 @@
 #include "makeFollowSet.c"
 #include "stack.c"
 
+
+
 char terminals[54][20] = {
 	"TK_ASSIGNOP",
 	"TK_COMMENT",
@@ -115,6 +117,24 @@ char nonTerminals[51][30] = {
 	"idList",
 	"more_ids"
 };
+
+struct treeNode{
+	char* nodeValue;
+	struct treeNode* parent;
+	struct treeNode* nextTreeNode; 
+}
+
+struct parseTree{
+	struct treeNode* root;
+}
+
+struct treeNode* getTreeNode(char* name){
+	struct treeNode* newTreeNode = (struct treeNode*)malloc(sizeof(struct treeNode));
+	newTreeNode->name = name;
+	newTreeNode->parent = NULL;
+	newTreeNode->nextTreeNode = NULL;
+	return newTreeNode;
+}
 
 struct set* findFollowSet(struct followSetList* followSets, char* name){
 	struct firstSet* temp = followSets->setList;
@@ -278,21 +298,59 @@ void addRule(struct stack* st,struct NodeList* rule){
 	return;
 } 
 
+struct treeNode* addRuleToTree(struct treeNode* parentNode,struct NodeList* rule){
+	
+	struct Node* tempNode = tempNodeList->node_list;
+	
+	struct treeNode* first = getTreeNode(tempNode->name);
+	struct treeNode* temp = first; 
+	tempNode= tempNode->next;
+	first->parent = parentNode;
+
+	while(tempNode!=NULL){
+		temp->nextTreeNode = getTreeNode(tempNode->name);
+		temp->parent = parentNode;
+		temp=temp->nextTreeNode;
+		tempNode = tempNode->next;
+	}
+	return first;
+}
+
 void parse(struct NodeList*** parseTable){
 	struct stack* st = getStack();
 	char* token = (char*)malloc(sizeof(char)*100);
 	struct Node* temp;
+	struct parseTree* tree = (struct parseTree*)malloc(sizeof(struct parseTree));
+	tree->root = getTreeNode("program");
+	struct treeNode* tempTreeNode = tree->root;
 	while(true){
 		token = nextToken();
 		temp = top(st);
 		while(strcmp(temp->name,token)!=0){
+			if(strcmp(temp->name,"eps")==0){
+				pop(st);
+				continue;
+			}
 			int i = getRowIndex(temp->name);
 			int j = getColIndex(token);
 			pop(st);
-			addRule(st,parseTable[i][j]);
+			if(parseTable[i][j]->node_list->name!=NULL)
+				{
+					addRule(st,parseTable[i][j]);
+					tempTreeNode = addRuleToTree(tempTreeNode,parseTable[i][j]);
+				}
+			temp = top(st);
 		}
 		pop(st);
 		if(strcmp(token,"TK_DOLLAR")==0 && checkEmpty(st)) return;
+		if(tempTreeNode->nextTreeNode!=NULL) tempTreeNode = tempTreeNode->nextTreeNode;
+		else {
+			while(tempTreeNode!=NULL){
+			if(tempTreeNode->parent!=NULL) {
+				if(tempTreeNode->parent->nextTreeNode!=NULL)tempTreeNode = tempTreeNode->parent->nextTreeNode;
+				else tempTreeNode = tempTreeNode->parentNode;
+			else  return;
+		}
 	}
 }
 
