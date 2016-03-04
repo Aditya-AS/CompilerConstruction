@@ -381,6 +381,14 @@ struct parseTree* parse(struct NodeList*** parseTable){
 					st = addRule(st,parseTable[i][j]);
 					tempTreeNode = addRuleToTree(tempTreeNode,parseTable[i][j]);
 				}
+			// else{
+				
+			// 	while(!temp->is_token){
+			// 		pop(st);
+			// 		temp = top(st);
+			// 	}
+
+			}
 			temp = top(st);
 		}
 		pop(st);
