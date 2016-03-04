@@ -5,8 +5,9 @@
  * f2013079@pilani.bits-pilani.ac.in & f2013183@pilani.bits-pilani.ac.in
  * Alex-1995 and Abhinav0208 - github handles.
  */
+ 
 //Define the structure of the symbol table, the functions that will be used etc.
-#define KEYWORD_SIZE 30
+ 
 #define TABLE_SIZE 25
 #define KEYWORD_FILE "keywords.txt"
 struct node{
@@ -15,6 +16,7 @@ struct node{
  	struct node* next;
 };
 typedef struct node node;
+
 
 node** createHashTable();
 node** populateHashTable(node** emptyHashTable, FILE* f);
