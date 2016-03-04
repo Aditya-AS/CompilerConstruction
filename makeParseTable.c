@@ -211,7 +211,9 @@ int getColIndex(char* name){
 }
 
 struct treeNode* getNextNode(struct treeNode* tree, int lineno){
-	if(tree->nextTreeNode==NULL) return getNextNode(tree->parent,lineno);
+	// printf("%s\n",tree->nodeValue);
+	if(tree->nextTreeNode==NULL && tree->parent!=NULL) return getNextNode(tree->parent,lineno);
+	else if(tree->parent==NULL) return tree;
 	tree->nextTreeNode->lineno = lineno;
 	return tree->nextTreeNode;
 }
@@ -365,6 +367,7 @@ struct parseTree* parse(struct NodeList*** parseTable){
 		{
 			if(strcmp(temp->name,"eps")==0){
 			pop(st);
+			tempTreeNode = getNextNode(tempTreeNode,i);
 			temp = top(st);
 			// printf("SEX");
 				continue;
@@ -381,9 +384,9 @@ struct parseTree* parse(struct NodeList*** parseTable){
 			temp = top(st);
 		}
 		pop(st);
+		if(strcmp(token,"TK_DOLLAR")==0 && checkEmpty(st)) {fclose(fp);return tree;}
 		tempTreeNode->lineno = i;
 		tempTreeNode = getNextNode(tempTreeNode,i);
-		if(strcmp(token,"TK_DOLLAR")==0 && checkEmpty(st)) {fclose(fp);return tree;}
 		i++;
 	}
 }
