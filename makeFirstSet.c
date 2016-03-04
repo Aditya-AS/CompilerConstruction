@@ -3,22 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "makeGrammar.c"
-
-struct set{
-	char* element;
-	struct set* nextElement;
-};
-
-struct firstSet{
-	char* setOf;
-	struct set* elementList;
-	struct firstSet* nextSet;
-};
-
-struct firstSetList{
-	struct firstSet* setList;
-};
+#include "makeGrammar.h"
+#include "makeFirstSet.h"
 
 struct set* getSet(){
 	struct set* newElement = (struct set*)malloc(sizeof(struct set));

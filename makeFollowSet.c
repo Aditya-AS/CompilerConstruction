@@ -2,12 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
-#include "makeFirstSet.c"
-
-struct followSetList{
-	struct firstSet* setList;
-};
+#include "makeFirstSet.h"
+#include "makeFollowSet.h"
 
 bool checkEpsilon(struct set* newSet){
 	struct set* temp = newSet;

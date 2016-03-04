@@ -3,29 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "checker.c"
-
-struct Node{
-	char* name;
-	bool is_token;
-	struct Node *next;
-};
-
-struct NodeList{
-	struct Node *node_list;
-	struct NodeList *nextList;
-};
-
-struct Rule{
-	int number_of_rules;
-	struct Node *start;
-	struct NodeList *rule_list;
-	struct Rule *nextRule;
-};
-
-struct Grammar{
-	struct Rule *rules;
-};
+#include "checker.h"
+#include "makeGrammar.h"
 
 struct Rule* getRule(){
 	struct Rule* newRule = (struct Rule*)malloc(sizeof(struct Rule));
@@ -154,10 +133,10 @@ void printGrammar(struct Grammar* grammar){
 	}
 }
 
-// int main(int argc, char const *argv[])
-// {
-// 	char *filename = "grammar_list";
-// 	struct Grammar* grammar = makeGrammar(filename);
-// 	printGrammar(grammar);
-// 	return 0;
-// }
+int main(int argc, char const *argv[])
+{
+	char *filename = "grammar_list";
+	struct Grammar* grammar = makeGrammar(filename);
+	printGrammar(grammar);
+	return 0;
+}

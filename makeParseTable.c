@@ -3,11 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "makeFollowSet.c"
-#include "stack.c"
-
-
-
+#include "makeFollowSet.h"
+#include "stack.h"
+#include "lexer.h"
 char terminals[54][20] = {
 	"TK_ASSIGNOP",
 	"TK_COMMENT",
@@ -64,7 +62,6 @@ char terminals[54][20] = {
 	"TK_COMMA",
 	"TK_DOLLAR"
 };
-
 char nonTerminals[51][30] = {
 	"program",
 	"mainFunction",
@@ -117,16 +114,6 @@ char nonTerminals[51][30] = {
 	"idList",
 	"more_ids"
 };
-
-struct treeNode{
-	char* nodeValue;
-	struct treeNode* parent;
-	struct treeNode* nextTreeNode; 
-}
-
-struct parseTree{
-	struct treeNode* root;
-}
 
 struct treeNode* getTreeNode(char* name){
 	struct treeNode* newTreeNode = (struct treeNode*)malloc(sizeof(struct treeNode));
@@ -204,6 +191,7 @@ struct NodeList*** makeParseTable(struct Grammar* grammar,struct firstSetList* s
 	struct set* temp2 = getSet();
 	struct set* temp3 = getSet();
 	struct Rule *tempRule = grammar->rules;
+
 	while(tempRule!=NULL){
 			// printf("%s,", tempRule->start->name);
 			struct NodeList* tempNodeList = tempRule->rule_list;
@@ -318,13 +306,14 @@ struct treeNode* addRuleToTree(struct treeNode* parentNode,struct NodeList* rule
 
 void parse(struct NodeList*** parseTable){
 	struct stack* st = getStack();
-	char* token = (char*)malloc(sizeof(char)*100);
+	char*  token = (char*)malloc(sizeof(char)*100);
 	struct Node* temp;
 	struct parseTree* tree = (struct parseTree*)malloc(sizeof(struct parseTree));
 	tree->root = getTreeNode("program");
 	struct treeNode* tempTreeNode = tree->root;
+	FILE* tokenFile = fopen("tokens_1.txt","r");
 	while(true){
-		token = nextToken();
+		fscanf(tokenFile,"%s",token);
 		temp = top(st);
 		while(strcmp(temp->name,token)!=0){
 			if(strcmp(temp->name,"eps")==0){
@@ -355,15 +344,15 @@ void parse(struct NodeList*** parseTable){
 }
 
 
-int main(int argc, char const *argv[]){
-	char* filename = "grammar_list";
-	struct Grammar* grammar = makeGrammar(filename);
-	struct firstSetList* sets = makeFirstSetList(grammar);
-	struct followSetList* followSets = makeFollowSetList(grammar,sets);
-	followSets = removeDup(followSets);
-	// printSet(sets);
-	struct NodeList*** parseTable = makeParseTable(grammar,sets,followSets);
-	printParseTable(parseTable);
-	return 0;
-}
+// int main(int argc, char *argv[]){
+// 	char* filename = "grammar_list";
+// 	struct Grammar* grammar = makeGrammar(filename);
+// 	struct firstSetList* sets = makeFirstSetList(grammar);
+// 	struct followSetList* followSets = makeFollowSetList(grammar,sets);
+// 	followSets = removeDup(followSets);
+// 	// printSet(sets);
+// 	struct NodeList*** parseTable = makeParseTable(grammar,sets,followSets);
+// 	printParseTable(parseTable);
+// 	return 0;
+// }
 

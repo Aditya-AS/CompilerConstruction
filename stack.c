@@ -1,12 +1,9 @@
 //program to make stack
 #include <stdio.h>
 #include <stdlib.h>
-#include "makeGrammar.c"
-
-struct stack{
-	struct Node* head;
-}
-
+#include <stdbool.h>
+#include "makeGrammar.h"
+#include "stack.h"
 struct stack* getStack(){
 	struct stack* newStack = (struct stack*)malloc(sizeof(struct stack));
 }
@@ -40,4 +37,7 @@ struct Node* top(struct stack* st){
 bool checkEmpty(struct stack * st){
 	if(st->head==NULL) return true;
 	else return false;
+}
+int main(){
+	return 0;
 }
