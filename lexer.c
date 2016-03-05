@@ -30,6 +30,7 @@
 //GLOBAL VARIABLE DECLARATION
 char** buffers;
 node** lookup_table;
+
 int curr_buff = 0,token_no = 0,first_flag = 0,curr_state = 0,line_no = 1,errors = 0;
 int block_size;
 char* lexeme_begin,*forward,*lookahead;
@@ -42,7 +43,7 @@ int isDelim(char c){
 }
 
 /*
-FILE* getStream(FILE* fp,char** B, buffersize buf_size){
+	FILE* getStream(FILE* fp,char** B, buffersize buf_size){
 	if(!first_flag){initializeBuffer(B,fp,buf_size);first_flag=1;}
 	else{reloadBuffer(B,fp,buf_size);}
 	return fp;
@@ -53,7 +54,6 @@ void printBuffers(){
 	//;updateForwardPointer();
 	while(1){printf("%c",*forward);int flag = updateForwardPointer();if(!flag)break;}
 }
-
 int reloadBuffer(char** buffers, FILE* fp, buffersize buf_size){
 	int read = fread(&buffers[curr_buff][0], sizeof(char), buf_size, fp);
 	if(read == buf_size){
@@ -122,8 +122,18 @@ float str_to_real(char* str){
 	int len = strlen(str);
 	return ans;
 }
+void panicRecovery(char* lexeme_begin, char* forward){
+	char* lex = (char*)malloc(sizeof(char)*100);
+	while(!isDelim(*forward))updateForwardPointer();
+	copyString(lex,lexeme_begin,forward);
+	fprintf(stderr,"Pattern Mismatch: Unexpected lexeme \" %s \" at line_no %d\n",lex,line_no);
 
-void panicRecovery(){while(!isDelim(*forward))updateForwardPointer(); lexeme_begin = forward;curr_state=0;errors=0;}
+	lexeme_begin = forward;
+	printf("%p %p\n",lexeme_begin,forward);
+	printf("%c %c\n",*(lexeme_begin+1),*forward);
+	curr_state=0;
+	free(lex);
+}
 
 tokenInfo* fillToken(char* def_token, char* lexeme_begin, char* forward,int type){
 	int error_flag = 0;
@@ -133,15 +143,22 @@ tokenInfo* fillToken(char* def_token, char* lexeme_begin, char* forward,int type
 	token->line_no = line_no;
 	token->token_no = token_no;
 	while(*lexeme_begin == ' ' || *lexeme_begin == '\n' || *lexeme_begin == '\t' || *lexeme_begin == '\r')lexeme_begin++;
-	while(*forward == ' ' || *forward == '\n')forward--;
+	while(*forward == ' ' || *forward == '\n' || *forward == '\t' || *forward == '\r')forward--;
 	strcpy(token->token_name, def_token);
 	int len = strlen(token->token_name);
 	if(token->token_name[len-1] == '\n')token->token_name='\0';
+
 	copyString(token->lexeme,lexeme_begin,forward);
+
+	if(strcmp(token->lexeme,"_main") ==0) strcpy(token->token_name,"TK_MAIN");
+	// printf("kkkkkkkkkkk------------\n");
 	char* c = checkKeyword(lookup_table, token->lexeme);
+
 	int lex_len = strlen(token->lexeme);
-	if(!strcmp(token->token_name,"TK_ID") && lex_len > 20) printf("Token Longer than 20 chars. Error!!!\n");
 	if(c != NULL)strcpy(token->token_name,c);
+	if(strcmp("TK_FUNID",token->token_name) && lex_len > 20) {fprintf(stderr,"Lexeme Longer than 20 chars. Error!!! at line %d and lexeme is %s\n",token->line_no,token->lexeme);return NULL;}
+
+	
 	switch(type){
 		case INT:
 			token->value = (int*)malloc(sizeof(int));
@@ -165,13 +182,17 @@ tokenInfo* fillToken(char* def_token, char* lexeme_begin, char* forward,int type
 }
 
 tokenInfo* getNextToken(FILE* fp){
-	int comment_flag = 0;int error_flag;
+
+	int comment_flag = 0;int error_flag=0;
 	tokenInfo* curr_token = NULL;
 	char* c = (char*)malloc(sizeof(char)*100);
 	lexeme_begin = forward;
+	// printf("kkkkkkkkkkk\n");
+	// printf("%c\n",*forward);
 	while(curr_token == NULL){
 			switch(*forward)
 			{
+
 				case '$':
 					curr_token = fillToken("TK_DOLLAR",lexeme_begin,forward,OTHER);
 				break;
@@ -182,15 +203,18 @@ tokenInfo* getNextToken(FILE* fp){
 				case '%' :
 					switch(curr_state){
 						case 0:
+							// printf("kkkkkkkkkkk\n");
 							curr_token = fillToken("TK_COMMENT",lexeme_begin,forward,OTHER);
+
 							while(*forward != '\n'){updateForwardPointer();}
 							if(*forward == '\n'){line_no++;updateForwardPointer();}
 							lexeme_begin = forward;
 							comment_flag = 1;
 						break;
 						default:
-							printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
-							error_flag = 1;errors++;
+							error_flag = 1;
+							errors++;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '[' :
@@ -198,8 +222,10 @@ tokenInfo* getNextToken(FILE* fp){
 						case 0:
 							curr_token=fillToken("TK_SQL",lexeme_begin,forward,OTHER);
 						break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
-							errors++;error_flag = 1;
+						default:
+							errors++;
+							error_flag = 1;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '_':
@@ -207,8 +233,10 @@ tokenInfo* getNextToken(FILE* fp){
 						case 0:
 							curr_state = 36; //lexeme_begin will not be updated now, until it reads something meaningfull and curr_token gets filled from state 36.
 						break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
-							errors++;error_flag = 1;
+						default:
+							errors++;
+							error_flag = 1;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case ']' : 
@@ -216,8 +244,10 @@ tokenInfo* getNextToken(FILE* fp){
 						case 0:
 							curr_token = fillToken("TK_SQR",lexeme_begin,forward,OTHER);
 						break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
+						default:
 							errors++;
+							error_flag=1;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case ';' :
@@ -225,8 +255,10 @@ tokenInfo* getNextToken(FILE* fp){
 						case 0:
 							curr_token = fillToken("TK_SEM",lexeme_begin,forward,OTHER);
 						break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
+						default:
 							errors++;
+							error_flag = 1;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case ':':
@@ -234,9 +266,10 @@ tokenInfo* getNextToken(FILE* fp){
 						case 0:
 							curr_token = fillToken("TK_COLON",lexeme_begin,forward,OTHER);
 						break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
-							//ERROR
+						default:
 							errors++;
+							error_flag = 1;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '.':
@@ -247,8 +280,9 @@ tokenInfo* getNextToken(FILE* fp){
 						case 31:
 							curr_state = 32;
 						break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
+						default:
 							errors++;
+
 					}
 				break;
 				case ',': 
@@ -256,16 +290,20 @@ tokenInfo* getNextToken(FILE* fp){
 						case 0:
 							curr_token = fillToken("TK_COMMA",lexeme_begin,forward,OTHER);
 						break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
+						default:
 							errors++;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '(':
 					switch(curr_state){
 						case 0:
 							curr_token = fillToken("TK_OP",lexeme_begin,forward,OTHER);
+							printf("----------------------- %c",*lexeme_begin);
 						break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);errors++;
+						default:
+							errors++;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case ')':
@@ -273,8 +311,9 @@ tokenInfo* getNextToken(FILE* fp){
 						case 0:
 							curr_token = fillToken("TK_CL",lexeme_begin,forward,OTHER);
 						break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
+						default:
 							errors++;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '+':
@@ -282,8 +321,9 @@ tokenInfo* getNextToken(FILE* fp){
 						case 0:
 							curr_token = fillToken("TK_PLUS",lexeme_begin,forward,OTHER);
 						break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
+						default:
 							errors++;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '*':
@@ -291,8 +331,9 @@ tokenInfo* getNextToken(FILE* fp){
 						case 0:
 							curr_token = fillToken("TK_MUL",lexeme_begin,forward,OTHER);
 						break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
+						default:
 							errors++;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '-':
@@ -310,8 +351,9 @@ tokenInfo* getNextToken(FILE* fp){
 					 		curr_state = 0;
 					 		curr_token = fillToken("TK_ASSIGNOP",lexeme_begin,forward,OTHER);
 					 	break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
+						default:
 							errors++;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '/':
@@ -320,6 +362,7 @@ tokenInfo* getNextToken(FILE* fp){
 					default:
 						//ERROR
 						errors++;
+						panicRecovery(lexeme_begin,forward);
 					}
 					break;
 				case '&':
@@ -336,8 +379,9 @@ tokenInfo* getNextToken(FILE* fp){
 							curr_state=0;
 							curr_token = fillToken("TK_AND",lexeme_begin,forward,OTHER);
 						break;
-						default:printf("Unknown Patternnnnnnnnnnnnnn found!! at line_no %d %d\n",line_no,curr_state);
+						default:
 							errors++;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '@':
@@ -352,8 +396,9 @@ tokenInfo* getNextToken(FILE* fp){
 							curr_state=0;
 							curr_token = fillToken("TK_OR",lexeme_begin,forward,OTHER);
 						break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
+						default:
 							errors++;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '~':
@@ -361,8 +406,9 @@ tokenInfo* getNextToken(FILE* fp){
 						case 0:
 							curr_token = fillToken("TK_NOT",lexeme_begin,forward,OTHER);
 						break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
+						default:
 							errors++;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '<':
@@ -371,8 +417,9 @@ tokenInfo* getNextToken(FILE* fp){
 							curr_state = 20;
 							if(*lookahead != '=' && *lookahead != '-'){curr_token = fillToken("TK_LT",lexeme_begin,forward,OTHER);curr_state=0;}
 						break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
+						default:
 							errors++;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '>':
@@ -381,8 +428,9 @@ tokenInfo* getNextToken(FILE* fp){
 							curr_state = 27;
 							if(*lookahead != '='){curr_token = fillToken("TK_GT",lexeme_begin,forward,OTHER);curr_state=0;}
 						break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
+						default:
 							errors++;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '=':
@@ -402,7 +450,9 @@ tokenInfo* getNextToken(FILE* fp){
 						case 29:
 							curr_token = fillToken("TK_NE",lexeme_begin,forward,OTHER);curr_state=0;
 						break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);errors++;
+						default:
+							errors++;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '2' ... '7':
@@ -443,8 +493,9 @@ tokenInfo* getNextToken(FILE* fp){
 								curr_state = 42;
 								if(isDelim(*lookahead)){curr_token = fillToken("TK_ID",lexeme_begin,forward,OTHER);curr_state=0;}
 							break;
-							default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);
+							default:
 								errors++;
+								panicRecovery(lexeme_begin,forward);
 						}
 				break;
 				case '0' ... '1':
@@ -473,7 +524,9 @@ tokenInfo* getNextToken(FILE* fp){
 								curr_state = 38;
 								if(isDelim(*lookahead)){curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}
 							break;
-							default: errors++;
+							default:
+								errors++;
+								panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '8' ... '9':
@@ -502,7 +555,9 @@ tokenInfo* getNextToken(FILE* fp){
 								curr_state = 38;
 								if(isDelim(*lookahead)){curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}
 							break;
-							default:errors++;
+							default:
+								errors++;
+								panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case 'b' ... 'd':
@@ -538,7 +593,9 @@ tokenInfo* getNextToken(FILE* fp){
 							curr_state = 41;
 							if(isDelim(*lookahead)){curr_token = fillToken("TK_ID",lexeme_begin,forward,OTHER);curr_state=0;}
 						break;
-						default:errors++;
+						default:
+							errors++;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case 'a':
@@ -573,6 +630,7 @@ tokenInfo* getNextToken(FILE* fp){
 							break;
 							default:
 								errors++;
+								panicRecovery(lexeme_begin,forward);
 						}
 				break;
 				case 'e' ... 'z':
@@ -607,6 +665,7 @@ tokenInfo* getNextToken(FILE* fp){
 							break;
 							default:
 								errors++;
+								panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '!':
@@ -616,6 +675,7 @@ tokenInfo* getNextToken(FILE* fp){
 						break;
 						default:
 							errors++;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '\n':
@@ -625,6 +685,7 @@ tokenInfo* getNextToken(FILE* fp){
 							lexeme_begin = forward;
 						break;
 						default:
+
 						break;
 					}
 					lexeme_begin = forward;
@@ -650,6 +711,7 @@ tokenInfo* getNextToken(FILE* fp){
 						 	if(isDelim(*lookahead)){curr_token = fillToken("TK_FUNID",lexeme_begin,forward,OTHER);curr_state=0;}
 						break;
 						default:
+							panicRecovery(lexeme_begin,forward);
 							errors++;
 					}
 				break;
@@ -660,25 +722,32 @@ tokenInfo* getNextToken(FILE* fp){
 						break;
 						default:
 							errors++;
+							panicRecovery(lexeme_begin,forward);
 						break;
 					}
 				break;
 				case ' ':
 					switch(curr_state){
 						case 0:lexeme_begin = forward;break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);curr_state=0;
+						default:
+							curr_state=0;
+							panicRecovery(lexeme_begin,forward);
 					}
 				break;
 				case '\v':
 					switch(curr_state){
 						case 0:lexeme_begin = forward;break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);curr_state=0;
+						default:
+							curr_state=0;
+							
 					}
 					break;
 				case '\f':
 					switch(curr_state){
 						case 0:lexeme_begin = forward;break;
-						default:printf("Unknown Pattern found!! at line_no %d %d\n",line_no,curr_state);curr_state=0;
+						default:
+							curr_state=0;
+
 					}
 					break;
 				case '\t':
@@ -694,12 +763,12 @@ tokenInfo* getNextToken(FILE* fp){
 				break;
 			}
 	//if(errors>0) panicRecovery();
-	if(!comment_flag)updateForwardPointer();
+	if(!comment_flag){printf("Up[dating forward pointer\n");updateForwardPointer();}
 	} 
 	lexeme_begin = forward;
 	return curr_token;
 }
-
+/*
 int main(int argc, char* argv[]){
 	if(argc <= 1) {fprintf(stderr,"Format: <exec> <filename.la> \n");exit(-1);}
 	else{
@@ -747,7 +816,7 @@ int main(int argc, char* argv[]){
 	}
 	return 0;
 }
-
+*/
 // int main(){
 // 	keywordFile = fopen(KEYWORD_FILE, "r");
 // 	lookup_table = createHashTable();

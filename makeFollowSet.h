@@ -1,4 +1,5 @@
 #include <stdbool.h>
+
 struct followSetList{
 	struct firstSet* setList;
 };

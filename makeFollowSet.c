@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "makeGrammar.h"
 #include "makeFirstSet.h"
 #include "makeFollowSet.h"
 

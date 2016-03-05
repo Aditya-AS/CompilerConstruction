@@ -133,10 +133,10 @@ void printGrammar(struct Grammar* grammar){
 	}
 }
 
-int main(int argc, char const *argv[])
-{
-	char *filename = "grammar_list";
-	struct Grammar* grammar = makeGrammar(filename);
-	printGrammar(grammar);
-	return 0;
-}
+// int main(int argc, char const *argv[])
+// {
+// 	char *filename = "grammar_list";
+// 	struct Grammar* grammar = makeGrammar(filename);
+// 	printGrammar(grammar);
+// 	return 0;
+// }

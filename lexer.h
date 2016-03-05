@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
-
 int isDelim(char c);
 void printBuffers();
 int reloadBuffer(char** buffers, FILE* fp, buffersize buf_size);

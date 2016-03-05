@@ -1,3 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include "makeGrammar.h"
+
 struct stack{
 	struct Node* head;
 };

@@ -26,7 +26,7 @@ stack.o: makeGrammar.o stack.c
 	$(CC) -c makeGrammar.o stack.c
 
 makeParseTable.o: makeFollowSet.o stack.o lexer.o makeParseTable.h makeParseTable.c
-	$(CC) -c makeFollowSet.o stack.o lexer.o makeParseTable.c
+	$(CC) -o makeParseTable makeFollowSet.o stack.o lexer.o makeParseTable.c
 
 clean:
 	rm -rf *.o
