@@ -116,7 +116,7 @@ void initializeBuffer(char** buffers,FILE* fp,buffersize buf_size){
 }
 //retunrs 0 if forward pointer reaches end of file, else returns 1
 int updateForwardPointer(){
-
+	forward = forward+1;
 	if(forward == &buffers[curr_buff][0] + block_size){
 		reloadBuffer(buffers, inputFile, block_size);
 		forward = &buffers[curr_buff][0];
@@ -124,10 +124,7 @@ int updateForwardPointer(){
 	else if(*forward == EOF){
 		return 0; 
 	}
-	else{
-		//printf("%s\n","ELSE CASE REACHED\n" );
-		forward = forward+1;
-	}
+	
 
 	if(*(forward+1) != '\0'){
 		lookahead = forward+1;
