@@ -33,7 +33,7 @@ ioStmt  TK_READ TK_OP SingleOrRecId  TK_CL TK_SEM | TK_WRITE TK_OP allVar  TK_CL
 allVar  TK_NUM | TK_RNUM | TK_ID allVarNext ;
 allVarNext TK_DOT TK_FIELDID | eps ;
 arithmeticExpression term expPrime  ; 
-booleanExpression  TK_OP booleanExpression  TK_CL logicalOp  TK_OP booleanExpression  TK_CL | var  relationalOp  var |  TK_NOT booleanExpression ;
+booleanExpression  TK_OP booleanExpression  TK_CL logicalOp  TK_OP booleanExpression  TK_CL | var  relationalOp  var |  TK_NOT TK_OP booleanExpression TK_CL ;
 all  TK_ID temp1 | TK_NUM | TK_RNUM ;
 temp1 temp | eps ;
 expPrime  lowPrecedenceOperators term expPrime | eps ;

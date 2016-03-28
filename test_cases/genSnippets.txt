@@ -1,0 +1,48 @@
+type real : c4;
+type real : d3cd6 ;
+[c4, d3cd6] <--- call _statistics with parameters [2,3,5] ;
+
+record #finance
+type int: value;
+type real:rate;
+type int: interest;
+endrecord
+
+type record #finance : d5bb45;
+
+d5bb45.value <--- 30;
+d5bb45.rate <--- 30.5;
+
+type record #finance : d5;
+type record #finance : c4;
+type record #finance : c3;
+c3 <--- c4 + d5;
+
+type int: c5d2: global;
+
+c2ddd2 <--- (4 + 3)*(d3bd -73);
+
+type int : b2cdb234;
+
+return;
+
+return [b5d, d3];
+
+while(c2d3 <=d2c3)
+c2d3 = c2d3+1;
+print (c2d3);
+endwhile
+
+if(c7>=d2dc)
+then
+print(c7);
+else
+print (d2dc);
+endif
+
+[c2d3, c2d4]<---call _function1 with parameters [b4d333, c3ddd34];
+
+call _function1 with parameters [b4d333, c3ddd34];
+
+(d3<=c5cd) &&& (b4>d2cd234)
+

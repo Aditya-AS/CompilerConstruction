@@ -36,10 +36,13 @@ int hashkey(char* keyword){
 	int i=0;int power = 1;
 	int hash = 0;
 	while(i<len){
+		if(keyword[i] == '\0'){i++;continue;}
 		hash += keyword[i]*power;
 		i++;
 		power = power*2;
 	}
+	//printf("hashkeyhashkey\n");
+	//printf("%d\n",hash%TABLE_SIZE);
 	return hash % TABLE_SIZE;
 }
 node** createHashTable(){
@@ -114,14 +117,16 @@ void printHashTable(node** hashTable){
 		i++;
 	}
 }
-
 char* checkKeyword(node** hash_table, char* keyword){
 	//(";lkdafj;dlskjfa;lsdkj\n");
 	int len = strlen(keyword);
-	if(keyword[len-1] == '\n')keyword[len-1] = '\0';
+	//if(keyword[len] == '\n')keyword[len] = '\0';
 	int hash = hashkey(keyword);
 	//printf("%d\n",hash);
-	char* c = (char*)malloc(sizeof(char)*MAX_TOKEN_LEN);
+	char* c = (char*)malloc(sizeof(char)*120);
+
+	//printf("lkjlkjlkjlkjlkjlkjlkjlkj\n");
+	
 	if(hash_table[hash] == NULL) return NULL;
 	else{
 		node* n = hash_table[hash];

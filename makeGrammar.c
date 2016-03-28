@@ -1,4 +1,10 @@
-//program to make grammar
+/*
+ * Batch 13
+ * Authors: Aditya Sarma, Abhinav Mehta.
+ * 2013A7PS079P and 2013A7PS183P
+ * f2013079@pilani.bits-pilani.ac.in & f2013183@pilani.bits-pilani.ac.in
+ * Alex-1995 and Abhinav0208 - github handles.
+ *///program to make grammar
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -89,7 +95,7 @@ struct Grammar* makeGrammar(char* filename){
 	grammmarList=fopen(filename,"r");
 	
 	struct Grammar* grammar= (struct Grammar*)malloc(sizeof(struct Grammar));
-	char *start = (char*)malloc(sizeof(char)*1000);
+	char *start = (char*)malloc(sizeof(char)*30);
 	struct Rule *newRule;
 	struct Rule *temp;
 	
@@ -133,10 +139,10 @@ void printGrammar(struct Grammar* grammar){
 	}
 }
 
-int main(int argc, char const *argv[])
-{
-	char *filename = "grammar_list";
-	struct Grammar* grammar = makeGrammar(filename);
-	printGrammar(grammar);
-	return 0;
-}
+// int main(int argc, char const *argv[])
+// {
+// 	char *filename = "grammar_list";
+// 	struct Grammar* grammar = makeGrammar(filename);
+// 	printGrammar(grammar);
+// 	return 0;
+// }

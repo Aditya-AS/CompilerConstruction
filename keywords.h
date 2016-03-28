@@ -7,7 +7,9 @@
  */
  
 //Define the structure of the symbol table, the functions that will be used etc.
- 
+#ifndef KEYWORDS_H
+#define KEYWORDS_H
+
 #define TABLE_SIZE 25
 #define KEYWORD_FILE "keywords.txt"
 struct node{
@@ -22,3 +24,5 @@ node** createHashTable();
 node** populateHashTable(node** emptyHashTable, FILE* f);
 void printHashTable(node** hashTable);
 char* checkKeyword(node** hash_table, char* keyword);
+
+#endif
