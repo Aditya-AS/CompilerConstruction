@@ -91,7 +91,6 @@ char terminals[54][20] = {
 	"TK_COMMA",
 	"TK_DOLLAR"
 };
-
 char nonTerminals[52][30] = {
 	"program",
 	"mainFunction",
@@ -146,9 +145,8 @@ char nonTerminals[52][30] = {
 	"idList",
 	"more_ids"
 };
-
-
-struct treeNode* getTreeNode(char* name){
+struct treeNode* getTreeNode(char* name)
+{
 	struct treeNode* newTreeNode = (struct treeNode*)malloc(sizeof(struct treeNode));
 	newTreeNode->nodeValue = name;
 	newTreeNode->lexemeCurrentNode = name;
@@ -162,8 +160,8 @@ struct treeNode* getTreeNode(char* name){
 	newTreeNode->lineno = -1;
 	return newTreeNode;
 }
-
-struct set* findFollowSet(struct followSetList* followSets, char* name){
+struct set* findFollowSet(struct followSetList* followSets, char* name)
+{
 	struct firstSet* temp = followSets->setList;
 	while(temp!=NULL){
 		if(strcmp(temp->setOf,name)==0) {
@@ -191,8 +189,8 @@ struct set* findFollowSet(struct followSetList* followSets, char* name){
 	}
 	return getSet();
 }
-
-struct NodeList*** initializeTable(int n1 , int n2){
+struct NodeList*** initializeTable(int n1 , int n2)
+{
 	struct NodeList*** RuleList;
 	RuleList = (struct NodeList***)malloc(sizeof(struct NodeList)*n1);
 	int i=0;
@@ -207,32 +205,32 @@ struct NodeList*** initializeTable(int n1 , int n2){
 	}
 	return RuleList;
 }
-
-int getRowIndex(char* name){
+int getRowIndex(char* name)
+{
 	int i=0;
 	for(i=0;i<52;i++){
 		if(strcmp(nonTerminals[i],name)==0) return i;
 	}
 	return -1;
 }
-
-int getColIndex(char* name){
+int getColIndex(char* name)
+{
 	int i=0;
 	for(i=0;i<54;i++){
 		if(strcmp(terminals[i],name)==0) return i;
 	}
 	return -1;
 }
-
-struct treeNode* getNextNode(struct treeNode* tree, int lineno){
+struct treeNode* getNextNode(struct treeNode* tree, int lineno)
+{
 	// printf("%s\n",tree->nodeValue);
 	if(tree->nextTreeNode==NULL && tree->parent!=NULL) return getNextNode(tree->parent,lineno);
 	else if(tree->parent==NULL) return tree;
 	tree->nextTreeNode->lineno = lineno;
 	return tree->nextTreeNode;
 }
-
-struct NodeList*** makeParseTable(struct Grammar* grammar,struct firstSetList* sets,struct followSetList* followSets){
+struct NodeList*** makeParseTable(struct Grammar* grammar,struct firstSetList* sets,struct followSetList* followSets)
+{
 
 	struct NodeList*** parseTable = initializeTable(52,54);
 	struct set* parent = getSet();
@@ -301,8 +299,8 @@ struct NodeList*** makeParseTable(struct Grammar* grammar,struct firstSetList* s
 	}
 	return parseTable;
 }
-
-void printParseTable(struct NodeList*** parseTable){
+void printParseTable(struct NodeList*** parseTable)
+{
  	int i=0,j=0;
  	printf(" ,");
  	for(j=0;j<54;j++){
@@ -317,10 +315,9 @@ void printParseTable(struct NodeList*** parseTable){
  		}
  		printf("\n");
  	}
- }
-
-
-struct stack* addRule(struct stack* st,struct NodeList* rule){
+}
+struct stack* addRule(struct stack* st,struct NodeList* rule)
+{
 	struct Node* tempNode = rule->node_list;
 	struct stack* st2 = getStack();
 	while(tempNode->next!=NULL){
@@ -337,8 +334,8 @@ struct stack* addRule(struct stack* st,struct NodeList* rule){
 	}
 	return st;
 } 
-
-struct treeNode* addRuleToTree(struct treeNode* parentNode,struct NodeList* rule){
+struct treeNode* addRuleToTree(struct treeNode* parentNode,struct NodeList* rule)
+{
 	
 	struct Node* tempNode = rule->node_list;
 	
@@ -368,8 +365,8 @@ struct treeNode* addRuleToTree(struct treeNode* parentNode,struct NodeList* rule
 	parentNode->children = first;
 	return first;
 }
-
-struct parseTree* parse(FILE * inputFile,struct NodeList*** parseTable, struct firstSetList* sets){
+struct parseTree* parse(FILE * inputFile,struct NodeList*** parseTable, struct firstSetList* sets)
+{
 	// FILE* fp = fopen("testcase1.txt","r");
 
 	tokenInfo* curr_token = NULL;
@@ -402,32 +399,39 @@ struct parseTree* parse(FILE * inputFile,struct NodeList*** parseTable, struct f
 	tree->root->parentNodeSymbol="ROOT";
 	tree->root->lineno=1;
 	struct treeNode* tempTreeNode = tree->root;
+	
 	push(st,"TK_EOF");
 	push(st,"program");
-		char* token = (char*)malloc(sizeof(char)*40);
-		char* lexeme = (char*)malloc(sizeof(char)*40);
-	// printTokenList(inputFile);
-	while(true){
 	
-		curr_token = getNextToken(inputFile);
-
+	char* token = (char*)malloc(sizeof(char)*40);
+	char* lexeme = (char*)malloc(sizeof(char)*40);
+	// printTokenList(inputFile);
+	 curr_token = getNextToken(inputFile);
+	 if(strcmp(curr_token->token_name, "TK_EOF") == 0){
+	 	printf("pehla token hi null hai\n");
+	 	return NULL;
+	 }
+	while(true)
+	{
+		
 		// printf("asd\n\n\n\n");
+		//curr_token = getNextToken(inputFile);
 		token = curr_token->token_name;
 		lexeme = curr_token->lexeme;
+		//printf("infinite loop %s\n",lexeme);
 		lineno = curr_token->line_no;
 		// printf("token = %s at line:%d\n",token,lineno);
 
-	
+		if(strcmp(token,"TK_COMMENT")==0 || strcmp(token,"TK_LEXERROR")==0 ){curr_token = getNextToken(inputFile);continue;}
 
-		if(strcmp(token,"TK_COMMENT")==0 || strcmp(token,"TK_LEXERROR")==0 )continue;
 		temp = top(st);
 		while(strcmp(temp->name,token)!=0)
 		{
-			if(strcmp(temp->name,"eps")==0){
-			pop(st);
-			tempTreeNode = getNextNode(tempTreeNode,i);
-			temp = top(st);
-			
+			if(strcmp(temp->name,"eps")==0)
+			{
+				pop(st);
+				tempTreeNode = getNextNode(tempTreeNode,i);
+				temp = top(st);
 				continue;
 			}
 			int i = getRowIndex(temp->name);
@@ -435,38 +439,37 @@ struct parseTree* parse(FILE * inputFile,struct NodeList*** parseTable, struct f
 			pop(st);
 			// printf("Current top: %s\n",temp->name);
 			if(i!=-1 && parseTable[i][j]!=NULL)
-				{
+			{
 					st = addRule(st,parseTable[i][j]);
 					tempTreeNode = addRuleToTree(tempTreeNode,parseTable[i][j]);
-				}
-			 else {
+			}
+			else 
+			{
 			 	printf("<ERROR> Identifier  %s expected at lineno %d \n",temp->name,lineno);
 			 	pop(st);
 			 	temp=top(st);
 				while(temp->is_token){
 					pop(st);
 					temp = top(st);
-				}
+			}
+			struct set* tempSet = findFirstSet(sets,temp->name);
 
-				struct set* tempSet = findFirstSet(sets,temp->name);
-
-				// curr_token = getNextToken(inputFile);
-
-				// // printf("asd\n\n\n\n");
-				// token = curr_token->token_name;
-				// lexeme = curr_token->lexeme;
-				// lineno = curr_token->line_no;
-				
-				while(!checkNode(tempSet,token)){
-					curr_token = getNextToken(inputFile);
-
+			// curr_token = getNextToken(inputFile);
+			// // printf("asd\n\n\n\n");
+			// token = curr_token->token_name;
+			// lexeme = curr_token->lexeme;
+			// lineno = curr_token->line_no;
+			
+			while(!checkNode(tempSet,token))
+			{
+				curr_token = getNextToken(inputFile);
 				// printf("asd\n\n\n\n");
-					token = curr_token->token_name;
-					lexeme = curr_token->lexeme;
-					lineno = curr_token->line_no;
-					if(strcmp(token,"TK_EOF")==0) {printf("Recovery not possible\n");return tree;}
-					// else printf("%s %s\n",token,temp->name);
-				}
+				token = curr_token->token_name;
+				lexeme = curr_token->lexeme;
+				lineno = curr_token->line_no;
+				if(strcmp(token,"TK_EOF")==0) {printf("Recovery not possible\n");return tree;}
+				// else printf("%s %s\n",token,temp->name);
+			}
 				int i = getRowIndex(temp->name);
 				int j = getColIndex(token);
 				pop(st);
@@ -490,13 +493,13 @@ struct parseTree* parse(FILE * inputFile,struct NodeList*** parseTable, struct f
 		tempTreeNode->lineno = lineno;
 		tempTreeNode->lexemeCurrentNode = lexeme;
 		tempTreeNode = getNextNode(tempTreeNode,i);
-			free(curr_token);
+		free(curr_token);
 		i++;
+		curr_token = getNextToken(inputFile);
 	}
 }
-
-
-void printTree(struct treeNode* tree,FILE* f){
+void printTree(struct treeNode* tree,FILE* f)
+{
 
 	if(!tree->isLeafNode)fprintf(f,"%-26s%-8d%-26s%-10s%-20s%-5s%-30s\n",dashes,tree->lineno,dashes,"-1",tree->parentNodeSymbol,tree->isLeafNode?"Yes":"No",tree->nodeValue);
 	else fprintf(f,"%-26s%-8d%-26s%-5s%-20s%-10s%-30s\n",tree->lexemeCurrentNode,tree->lineno,tree->nodeValue,(strcmp((tree->nodeValue),"TK_NUM")==0 || strcmp((tree->nodeValue),"TK_RNUM")==0)?tree->lexemeCurrentNode:"-1",tree->parentNodeSymbol,tree->isLeafNode?"Yes":"No",tree->nodeValue);
