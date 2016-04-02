@@ -55,10 +55,10 @@ FILE* commentFreeCode(FILE* f){
 tokenInfo* printTokenList(FILE* inputfile){
 	tokenInfo* token = getNextToken(inputFile);
 	while(strcmp(token->token_name,"TK_EOF")){
-		printf("%s\t%s\t%d\n",token->token_name,token->lexeme,token->line_no);
+		printf("%-20s%-25s%-3d\n",token->token_name,token->lexeme,token->line_no);
 		token = getNextToken(inputFile);
 	}
-	printf("%s\t%s\t%d\n",token->token_name,token->lexeme,token->line_no);
+	printf("%-20s%-25s%-3d\n",token->token_name,token->lexeme,token->line_no);
 	return token;
 
 }
@@ -76,12 +76,15 @@ int main(int argc, char* argv[]){
 	buffers[0] = (char*)malloc(sizeof(char)*(block_size+1));
 	buffers[1] = (char*)malloc(sizeof(char)*(block_size+1)); //one extra for the sentinel value.
 	keywordFile = fopen("keywords.txt","r");
+	if(keywordFile == NULL){printf("The keyword File \"keywords.txt\" not found. Error!\n");exit(-1);}
 	lookup_table = createHashTable();
 	populateHashTable(lookup_table,keywordFile);
+	printf("LOOKUP TABLE SUCCESSFULLY POPULATED\n");
 	forward = NULL;
 	lexeme_begin = NULL;
 	FILE* keywordFile = fopen("keywords.txt","r");
 	inputFile = fopen(argv[1],"r");
+	if(inputFile == NULL){printf("Input File %s not found\n",argv[1]);exit(-1);}
 	FILE *inputCopyFile = inputFile;
 	initializeBuffer(buffers, inputFile, block_size);
 	if(inputFile == NULL){printf("%s\n","Error opening the source code. Please check file permissions etc");return -1;}
@@ -98,12 +101,6 @@ int main(int argc, char* argv[]){
 		case 1: commentFreeCode(stdout);fclose(inputFile);break;
 		case 2: printTokenList(inputFile);fclose(inputFile);break;
 		case 3:	{
-			// FILE* f = fopen("a.txt","w");
-			// commentFreeCode(f);
-			// fclose(f);
-			// inputCopyFile = fopen("a.txt","r");
-			// // inputFile = f;
-			// inputFile = inputCopyFile;
 			char* filename = "grammar_list";
 			struct Grammar* grammar = makeGrammar(filename);
 			struct firstSetList* sets = makeFirstSetList(grammar);
@@ -119,11 +116,6 @@ int main(int argc, char* argv[]){
 		}
 		break;
 		case 4:{
-			// FILE* f = fopen("a.txt","w");
-			// commentFreeCode(f);
-			// //fclose(f);
-			// inputCopyFile = fopen("a.txt","r");
-			// inputFile = inputCopyFile;
 			char* filename = "grammar_list";
 			struct Grammar* grammar = makeGrammar(filename);
 			struct firstSetList* sets = makeFirstSetList(grammar);

@@ -192,9 +192,9 @@ tokenInfo* fillToken(char* def_token, char* lexeme_begin, char* forward,int type
 	}
 
 	if(strcmp("TK_LEXERROR",def_token)){
-	while(*lex_begin == ' ' || *lex_begin == '\n' || *lex_begin == '\t' || *lex_begin == '\r')lex_begin++;
-	while(*forward_copy == ' ' || *forward_copy == '\n' || *forward_copy == '\t' || *forward_copy == '\r')forward_copy--;
-}
+		while(*lex_begin == ' ' || *lex_begin == '\n' || *lex_begin == '\t' || *lex_begin == '\r')lex_begin++;
+		while(*forward_copy == ' ' || *forward_copy == '\n' || *forward_copy == '\t' || *forward_copy == '\r')forward_copy--;
+	}
 	strcpy(token->token_name, def_token);
 
 	int len = strlen(token->token_name);
@@ -217,7 +217,7 @@ tokenInfo* fillToken(char* def_token, char* lexeme_begin, char* forward,int type
 	if(c != NULL)strcpy(token->token_name,c);
 	if(strcmp("TK_FUNID",token->token_name) && lex_len > 20 && strcmp("TK_COMMENT",token->token_name)) {strcpy(token->token_name, "TK_LEXERROR");fprintf(stderr,"Identifier Lexeme Longer than 20 chars. Error!!! at line %d and lexeme is %s\n",token->line_no,token->lexeme);return token;}
 	if(strcmp("TK_FUNID",token->token_name)==0 &&  lex_len > 30 && strcmp("TK_COMMENT",token->token_name)) {strcpy(token->token_name, "TK_LEXERROR");fprintf(stderr,"Function Identifier Lexeme Longer than 30 chars. Error!!! at line %d and lexeme is %s\n",token->line_no,token->lexeme);return token;}
-/*
+
 	switch(type){
 		case INT:
 			token->value = (int*)malloc(sizeof(int));
@@ -236,7 +236,7 @@ tokenInfo* fillToken(char* def_token, char* lexeme_begin, char* forward,int type
 		default:
 			token->value = NULL;
 			break;
-	}*/
+	}
 	return token;
 }
 //this methods is called when a transition is not possible in the DFA for the current forward pointer. This will take care of skipping characters appropriately
@@ -247,8 +247,8 @@ tokenInfo* panicRecovery(char* lexeme_begin, char* forward){
 
 	//printf("forward = %c\n",*forward);
 	while(!isDelim(*forward)){
-			updateForwardPointer();
-		}
+		updateForwardPointer();
+	}
 	//printf("Delimiter Reached. the Delimiter is \"%c\"\n",*forward);
 
 	copyString(lex,lexeme_begin,forward);
