@@ -64,7 +64,8 @@ tokenInfo* printTokenList(FILE* inputfile){
 }
 
 
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[])
+{
 	if(argc < 3){printf("Wrong invocation.! Try \"<exec> <filename> <parseTreeDestFile>\"\n");return -1;}
 	int option;
 	tokenInfo* curr_token = NULL;
@@ -96,11 +97,13 @@ int main(int argc, char* argv[]){
 	printf("Press 4 for creating a parse tree and printing it appropriately\n");
 	
 	scanf("%d",&option);
-	switch(option){
+	switch(option)
+	{
 		
 		case 1: commentFreeCode(stdout);fclose(inputFile);break;
 		case 2: printTokenList(inputFile);fclose(inputFile);break;
-		case 3:	{
+		case 3:	
+		{
 			char* filename = "grammar_list";
 			struct Grammar* grammar = makeGrammar(filename);
 			struct firstSetList* sets = makeFirstSetList(grammar);
@@ -108,17 +111,18 @@ int main(int argc, char* argv[]){
 			struct followSetList* followSets = makeFollowSetList(grammar,sets);
 			followSets = removeDup(followSets);
 			printf("FOLLOW SETS AUTOMATED\n");
-			printf("11111111111111111\n");
+			//		printf("11111111111111111\n");
 			struct NodeList*** parseTable = makeParseTable(grammar,sets,followSets);
-			printf("2222222222222222222\n");
+			//		printf("2222222222222222222\n");
 			// printf("%s\n",argv[1]);
 			struct parseTree* tree= parse(inputCopyFile,parseTable,sets);  ///// SEG FAULT FOR EMPTY FILE HERE
-			printf("33333333333333333333\n");
+			//		printf("33333333333333333333\n");
 	
 			printf("SUCCESSFULLY COMPILED\n");
 		}
 		break;
-		case 4:{
+		case 4:
+		{
 			char* filename = "grammar_list";
 			struct Grammar* grammar = makeGrammar(filename);
 			struct firstSetList* sets = makeFirstSetList(grammar);
@@ -126,19 +130,19 @@ int main(int argc, char* argv[]){
 			struct followSetList* followSets = makeFollowSetList(grammar,sets);
 			followSets = removeDup(followSets);
 			printf("FOLLOW SETS AUTOMATED\n");
-			printf("11111111111111111\n");
+			//		printf("11111111111111111\n");
 			struct NodeList*** parseTable = makeParseTable(grammar,sets,followSets);
-			printf("2222222222222222222\n");
+			//		printf("2222222222222222222\n");
 			// printf("%s\n",argv[1]); 
 			struct parseTree* tree= parse(inputCopyFile,parseTable,sets); //SEG_FAULT FOR EMPTY FILE HERE...
-			printf("33333333333333333333\n"); 
+			//		printf("33333333333333333333\n"); 
 			if(tree == NULL)
 			{
 				printf("NO PARSE TREE TO PRINT! INPUT FILE WAS EMPTY! BYE BYE\n");
 				break;
 			}
 			printTree(tree->root,parseTreeOutput);
-			printf("4444444444444444444444444\n");
+			//		printf("4444444444444444444444444\n");
 			printf("SUCCESSFULLY COMPILED\n");
 			fclose(parseTreeOutput);
 		}

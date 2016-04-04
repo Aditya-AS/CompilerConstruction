@@ -453,13 +453,11 @@ struct parseTree* parse(FILE * inputFile,struct NodeList*** parseTable, struct f
 					temp = top(st);
 			}
 			struct set* tempSet = findFirstSet(sets,temp->name);
-
 			// curr_token = getNextToken(inputFile);
 			// // printf("asd\n\n\n\n");
 			// token = curr_token->token_name;
 			// lexeme = curr_token->lexeme;
 			// lineno = curr_token->line_no;
-			
 			while(!checkNode(tempSet,token))
 			{
 				curr_token = getNextToken(inputFile);
@@ -474,7 +472,7 @@ struct parseTree* parse(FILE * inputFile,struct NodeList*** parseTable, struct f
 				int j = getColIndex(token);
 				pop(st);
 
-					if(i!=-1 && parseTable[i][j]!=NULL)
+				if(i!=-1 && parseTable[i][j]!=NULL)
 				{
 					st = addRule(st,parseTable[i][j]);
 					tempTreeNode = addRuleToTree(tempTreeNode,parseTable[i][j]);
@@ -490,6 +488,7 @@ struct parseTree* parse(FILE * inputFile,struct NodeList*** parseTable, struct f
 		pop(st);
 
 		if(strcmp(token,"TK_EOF")==0 && checkEmpty(st)) {fclose(inputFile);return tree;}
+
 		tempTreeNode->lineno = lineno;
 		tempTreeNode->lexemeCurrentNode = lexeme;
 		tempTreeNode = getNextNode(tempTreeNode,i);
